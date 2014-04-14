@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="94">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>include/error.h</itemPath>
+      <itemPath>include/fasta.h</itemPath>
+      <itemPath>include/memory.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>src/error.c</itemPath>
+      <itemPath>src/fasta.c</itemPath>
+      <itemPath>src/memory.c</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="BioC Error CUnit Test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>tests/errortest.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3"
+                     displayName="BioC Fasta CUnit Test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>tests/fastatest.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f2"
+                     displayName="BioC Memory CUnit Test"
+                     projectFiles="true"
+                     kind="TEST">
+        <itemPath>tests/memorytest.c</itemPath>
+      </logicalFolder>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceRootList>
+    <Elem>src</Elem>
+  </sourceRootList>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="3">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <incDir>
+            <pElem>include</pElem>
+          </incDir>
+        </cTool>
+        <archiverTool>
+        </archiverTool>
+      </compileType>
+      <folder path="TestFiles/f1">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f2">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f2</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f3">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f3</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="include/error.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/fasta.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/memory.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/error.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/fasta.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/memory.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/errortest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/fastatest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/memorytest.c" ex="false" tool="0" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Release" type="2">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f4</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <folder path="TestFiles/f1">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f2">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f2</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <folder path="TestFiles/f3">
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f3</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+            <linkerOptionItem>-lcunit</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </folder>
+      <item path="include/error.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/fasta.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/memory.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/error.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/fasta.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/memory.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/errortest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/fastatest.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="tests/memorytest.c" ex="false" tool="0" flavor2="0">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
