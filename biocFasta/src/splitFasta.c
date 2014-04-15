@@ -11,6 +11,8 @@
 #include <getopt.h>
 #include <time.h>
 #include "fasta.h"
+#include "btime.h"
+#include "error.h"
 
 char *program_name;
 
@@ -92,9 +94,9 @@ int main(int argc, char** argv) {
         print_usage(stderr, -1);
     }
 
-    FILE *fd = fopen(input, "r");
-    FILE *fo = fopen(output, "w");
-
+    FILE *fd = checkPointerError(fopen(input, "r"),"Can't open input file",__FILE__,__LINE__, -1);
+    FILE *fo = checkPointerError(fopen(output, "w"),"Can't open output file",__FILE__,__LINE__, -1);
+    
     while ((fasta = ReadFasta(fd)) != NULL) {
         fasta->printOverlapSegments(fasta, fo, length, offset, size);
 
@@ -104,7 +106,8 @@ int main(int argc, char** argv) {
     fclose(fd);
     fclose(fo);
     if (input) free(input);
-    if (output) free(output);
+    if (output) free(output);clock_gettime(CLOCK_MONOTONIC, &stop);
+    printf("\n\tThe total time was %lu sec\n\n", timespecDiff(&stop, &start) / 1000000000);
     return (EXIT_SUCCESS);
 }
 
