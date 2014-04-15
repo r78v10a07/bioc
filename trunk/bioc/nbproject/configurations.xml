@@ -4,6 +4,8 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>include/bstring.h</itemPath>
+      <itemPath>include/btime.h</itemPath>
       <itemPath>include/error.h</itemPath>
       <itemPath>include/fasta.h</itemPath>
       <itemPath>include/memory.h</itemPath>
@@ -15,6 +17,8 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>src/bstring.c</itemPath>
+      <itemPath>src/btime.c</itemPath>
       <itemPath>src/error.c</itemPath>
       <itemPath>src/fasta.c</itemPath>
       <itemPath>src/memory.c</itemPath>
@@ -94,11 +98,19 @@
           </linkerLibItems>
         </linkerTool>
       </folder>
+      <item path="include/bstring.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/btime.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/error.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/fasta.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/memory.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/bstring.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/btime.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/error.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -164,11 +176,19 @@
           </linkerLibItems>
         </linkerTool>
       </folder>
+      <item path="include/bstring.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="include/btime.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/error.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/fasta.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/memory.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/bstring.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/btime.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/error.c" ex="false" tool="0" flavor2="0">
       </item>
