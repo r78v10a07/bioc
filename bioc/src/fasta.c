@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "memory.h"
+#include "bstring.h"
 #include "fasta.h"
 
 #define _CHECK_SELF_P(s) checkPointerError(s, "Null self pointer", __FILE__, __LINE__, -1)
@@ -98,11 +99,39 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
  */
 void printOverlapSegments(void * self, FILE *out, int length, int offset, int lineLength) {
     _CHECK_SELF_P(self);
-    int i;
+    int i, index;
+    char **ids;
+    int ids_number;
+    size_t size = (strlen(((fasta_l) self)->header)) + 1000;
+    char *header = allocate(sizeof (char) * size,__FILE__, __LINE__);
+
+    memset(header, 0, size);
+    ids_number = splitString(&ids, ((fasta_l) self)->header, "|");
+    if (ids_number % 2 == 0) {
+        strcpy(header, ((fasta_l) self)->header);
+        strcat(header, "|from-to|");
+    } else {
+        for (i = 0; i < ids_number - 1; i++) {
+            strcat(header, ids[i]);
+            strcat(header, "|");
+        }
+        strcat(header, "from-to|");
+    }
+
+    index = strlen(header);
     for (i = 0;; i += offset) {
-        printSegment(self, out, "head", i, length, lineLength);
+        header[index] = '\0';
+        if (ids_number % 2 == 0) {
+            sprintf(header, "%s%d-%d", header, i, i + length);
+        } else {
+            sprintf(header, "%s%d-%d|%s", header, i, i + length, ids[ids_number - 1]);
+        }
+        printSegment(self, out, header, i, length, lineLength);
         if (i + length >= ((fasta_l) self)->length(self)) break;
     }
+
+    freeString(ids, ids_number);
+    free(header);
 }
 
 /**

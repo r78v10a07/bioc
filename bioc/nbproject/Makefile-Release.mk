@@ -35,6 +35,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/src/bstring.o \
+	${OBJECTDIR}/src/btime.o \
 	${OBJECTDIR}/src/error.o \
 	${OBJECTDIR}/src/fasta.o \
 	${OBJECTDIR}/src/memory.o
@@ -71,6 +73,16 @@ LDLIBSOPTIONS=-lcunit
 ${TESTDIR}/TestFiles/f4: ${OBJECTFILES}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.c} -o ${TESTDIR}/TestFiles/f4 ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
+
+${OBJECTDIR}/src/bstring.o: src/bstring.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/bstring.o src/bstring.c
+
+${OBJECTDIR}/src/btime.o: src/btime.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/btime.o src/btime.c
 
 ${OBJECTDIR}/src/error.o: src/error.c 
 	${MKDIR} -p ${OBJECTDIR}/src
@@ -122,6 +134,32 @@ ${TESTDIR}/tests/memorytest.o: tests/memorytest.c
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/memorytest.o tests/memorytest.c
 
+
+${OBJECTDIR}/src/bstring_nomain.o: ${OBJECTDIR}/src/bstring.o src/bstring.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/bstring.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -O2 -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/bstring_nomain.o src/bstring.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/src/bstring.o ${OBJECTDIR}/src/bstring_nomain.o;\
+	fi
+
+${OBJECTDIR}/src/btime_nomain.o: ${OBJECTDIR}/src/btime.o src/btime.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/btime.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -O2 -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/btime_nomain.o src/btime.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/src/btime.o ${OBJECTDIR}/src/btime_nomain.o;\
+	fi
 
 ${OBJECTDIR}/src/error_nomain.o: ${OBJECTDIR}/src/error.o src/error.c 
 	${MKDIR} -p ${OBJECTDIR}/src

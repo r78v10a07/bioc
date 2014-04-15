@@ -24,6 +24,7 @@ void printLog(FILE *out, char *msg, char *file, int line, int exit_status) {
         fprintf(out, "%s", msg);
     }
     if (exit_status != 0) {
+        fprintf(out, "\n");
         exit(exit_status);
     }
 }
