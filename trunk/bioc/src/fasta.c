@@ -80,6 +80,44 @@ int length(void *self) {
 }
 
 /**
+ * Set the fasta header
+ * 
+ * @param self the container object
+ * @param string the header
+ */
+void setHeader(void *self, char *string) {
+
+    _CHECK_SELF_P(self);
+    ((fasta_l) self)->header = strdup(string);
+}
+
+/**
+ * Set the sequence
+ * 
+ * @param self the container object
+ * @param string the sequence
+ */
+void setSeq(void *self, char *string) {
+
+    _CHECK_SELF_P(self);
+    ((fasta_l) self)->seq = strdup(string);
+    ((fasta_l) self)->len = strlen(string);
+}
+
+/**
+ * Free the fasta container
+ * 
+ * @param self the container object
+ */
+void freeFasta(void *self) {
+    _CHECK_SELF_P(self);
+    if (((fasta_l) self)->header) free(((fasta_l) self)->header);
+
+    if (((fasta_l) self)->seq) free(((fasta_l) self)->seq);
+    free(((fasta_l) self));
+}
+
+/**
  * Extract and print a segments from the start position with length
  * 
  * @param self the container object
@@ -118,7 +156,20 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
  */
 fasta_l getSegment(void * self, char *header, int start, int length) {
     _CHECK_SELF_P(self);
-    fasta_l out = CreateFasta();
+    fasta_l out = allocate(sizeof (struct fasta_s), __FILE__, __LINE__);
+
+    out->header = NULL;
+    out->seq = NULL;
+    out->len = 0;
+    out->toString = NULL;
+    out->length = NULL;
+    out->free = NULL;
+    out->setHeader = &setHeader;
+    out->setSeq = &setSeq;
+    out->printOverlapSegments = NULL;
+    out->printSegment = NULL;
+    out->printOverlapSegmentsPthread = NULL;
+    out->toFile = &toFile;
     int size;
 
     if (start < ((fasta_l) self)->len) {
@@ -259,6 +310,7 @@ void *thread_functionInMem(void *arg) {
             sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
         }
         fasta = getSegment(self, header, i, parms->length);
+        printf("%d %d\n",parms->number, resNumber);
         res = realloc(res, sizeof(void **) * (resNumber + 1));
         checkPointerError(res, "Can't allocate memory",__FILE__, __LINE__, -1);
         res[resNumber] = fasta;
@@ -371,44 +423,6 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
 }
 
 /**
- * Set the fasta header
- * 
- * @param self the container object
- * @param string the header
- */
-void setHeader(void *self, char *string) {
-
-    _CHECK_SELF_P(self);
-    ((fasta_l) self)->header = strdup(string);
-}
-
-/**
- * Set the sequence
- * 
- * @param self the container object
- * @param string the sequence
- */
-void setSeq(void *self, char *string) {
-
-    _CHECK_SELF_P(self);
-    ((fasta_l) self)->seq = strdup(string);
-    ((fasta_l) self)->len = strlen(string);
-}
-
-/**
- * Free the fasta container
- * 
- * @param self the container object
- */
-void freeFasta(void *self) {
-    _CHECK_SELF_P(self);
-    if (((fasta_l) self)->header) free(((fasta_l) self)->header);
-
-    if (((fasta_l) self)->seq) free(((fasta_l) self)->seq);
-    free(((fasta_l) self));
-}
-
-/**
  * Create the Fasta object and initialized the pointers to the methods
  * 
  * @return a fasta_l object
@@ -427,6 +441,7 @@ fasta_l CreateFasta() {
     self->printOverlapSegments = &printOverlapSegments;
     self->printSegment = &printSegment;
     self->printOverlapSegmentsPthread = &printOverlapSegmentsPthread;
+    self->toFile = &toFile;
 
     return self;
 }
