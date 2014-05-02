@@ -44,7 +44,17 @@ void toFile(void * self, FILE *out, int lineLength) {
     _CHECK_SELF_P(self);
     int i = 0;
     int j = 0;
+    char *tmp = allocate(sizeof(char) * (lineLength + 1),__FILE__, __LINE__);
     fprintf(out, ">%s\n", ((fasta_l) self)->header);
+    for (i = 0; i < ((fasta_l) self)->len; i += lineLength) {
+        if (i + lineLength < ((fasta_l) self)->len){
+            strncpy(tmp,(((fasta_l) self)->seq + i),lineLength);            
+        }else{
+            strncpy(tmp,(((fasta_l) self)->seq + i),((fasta_l) self)->len - i);
+        }
+        fprintf(out,"%s\n",tmp);
+    }
+    free(tmp);/*
     while (i < ((fasta_l) self)->len) {
         if (j == lineLength) {
             fprintf(out, "\n");
@@ -54,7 +64,7 @@ void toFile(void * self, FILE *out, int lineLength) {
         j++;
         i++;
     }
-    fprintf(out, "\n");
+    fprintf(out, "\n");*/
 }
 
 /**
@@ -310,9 +320,8 @@ void *thread_functionInMem(void *arg) {
             sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
         }
         fasta = getSegment(self, header, i, parms->length);
-        printf("%d %d\n",parms->number, resNumber);fflush(NULL);
-        res = realloc(res, sizeof(void **) * (resNumber + 1));
-        checkPointerError(res, "Can't allocate memory",__FILE__, __LINE__, -1);
+        res = realloc(res, sizeof (void **) * (resNumber + 1));
+        checkPointerError(res, "Can't allocate memory", __FILE__, __LINE__, -1);
         res[resNumber] = fasta;
         resNumber++;
         if (i + parms->length >= ((fasta_l) self)->len) break;
@@ -411,7 +420,6 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
             if (tFiles[i]) free(tFiles[i]);
         } else {
             for (j = 0; j < tp[i].resNumber; j++) {
-                
                 ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
                 ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
             }
