@@ -44,11 +44,10 @@ void toFile(void * self, FILE *out, int lineLength) {
     _CHECK_SELF_P(self);
     int i = 0;
     int j = 0;
-    //char *tmp = allocate(sizeof (char) * (lineLength + 1), __FILE__, __LINE__);
+    char *tmp = allocate(sizeof (char) * (lineLength + 1), __FILE__, __LINE__);
     fprintf(out, ">%s\n", ((fasta_l) self)->header);
-    fprintf(out, "%s\n", ((fasta_l) self)->seq);
-    /*
     for (i = 0; i < ((fasta_l) self)->len; i += lineLength) {
+        memset(tmp,0,sizeof (char) * (lineLength + 1));
         if (i + lineLength < ((fasta_l) self)->len) {
             strncpy(tmp, (((fasta_l) self)->seq + i), lineLength);
         } else {
@@ -56,17 +55,7 @@ void toFile(void * self, FILE *out, int lineLength) {
         }
         fprintf(out, "%s\n", tmp);
     }
-    free(tmp); /*
-    while (i < ((fasta_l) self)->len) {
-        if (j == lineLength) {
-            fprintf(out, "\n");
-            j = 0;
-        }
-        fprintf(out, "%c", *(((fasta_l) self)->seq + i));
-        j++;
-        i++;
-    }
-    fprintf(out, "\n");*/
+    free(tmp);
 }
 
 /**
@@ -179,8 +168,8 @@ fasta_l getSegment(void * self, char *header, int start, int length) {
             size = ((fasta_l) self)->len - start;
         }
         out->setHeader(out, header);
-        memset(tmp,0,sizeof (char) * (length + 1));
-        strncpy(tmp,(((fasta_l) self)->seq + start), size);
+        memset(tmp, 0, sizeof (char) * (length + 1));
+        strncpy(tmp, (((fasta_l) self)->seq + start), size);
         out->setSeq(out, tmp);
         return out;
     }
@@ -411,23 +400,15 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
             remove(tFiles[i]);
             if (tFiles[i]) free(tFiles[i]);
         } else {
-            printf("%s %d\n",__LINE__, __FILE__); fflush(NULL);
             for (j = 0; j < tp[i].resNumber; j++) {
-                printf("%d %s %d\n",j,__LINE__, __FILE__);fflush(NULL);            
                 ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
-                printf("%s %d\n",__LINE__, __FILE__); fflush(NULL);      
                 ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
-                printf("%s %d\n",__LINE__, __FILE__);  fflush(NULL);     
             }
         }
     }
-    printf("%s %d\n",__LINE__, __FILE__);fflush(NULL);   
     if (tp) free(tp);
-    printf("%s %d\n",__LINE__, __FILE__);fflush(NULL);   
     if (tFiles)free(tFiles);
-    printf("%s %d\n",__LINE__, __FILE__);fflush(NULL);   
     if (threads)free(threads);
-    printf("%s %d\n",__LINE__, __FILE__);fflush(NULL);   
 }
 
 /**
@@ -484,7 +465,9 @@ fasta_l ReadFasta(FILE *fp) {
     }
 
 
-    self->len = self->length(self);
+    if (self != NULL) {
+        self->len = self->length(self);
+    }
     if (line) free(line);
     return self;
 }
