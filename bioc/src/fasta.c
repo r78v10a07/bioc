@@ -410,7 +410,7 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
             remove(tFiles[i]);
             if (tFiles[i]) free(tFiles[i]);
         } else {
-            for (j = 0; j < tp[i].resNumber; i++) {
+            for (j = 0; j < tp[i].resNumber; j++) {
                 ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
                 ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
             }
