@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
         } else {
             fasta->printOverlapSegments(fasta, fo, length, offset, size);
         }
-        fasta->free(fasta);
+        fasta->free(fasta); 
     }
 
     fclose(fd);
