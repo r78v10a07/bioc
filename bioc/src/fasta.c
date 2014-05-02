@@ -29,6 +29,8 @@ typedef struct thread_param {
     int length;
     int offset;
     int lineLength;
+    void **res;
+    int resNumber;
 } thread_param_t;
 
 /**
@@ -43,7 +45,7 @@ void toFile(void * self, FILE *out, int lineLength) {
     int i = 0;
     int j = 0;
     fprintf(out, ">%s\n", ((fasta_l) self)->header);
-    while (i < ((fasta_l) self)->length(self)) {
+    while (i < ((fasta_l) self)->len) {
         if (j == lineLength) {
             fprintf(out, "\n");
             j = 0;
@@ -92,7 +94,7 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
     int i = start;
     int j = 0;
     fprintf(out, ">%s\n", header);
-    while (i < ((fasta_l) self)->length(self) && (i - start) < length) {
+    while (i < ((fasta_l) self)->len && (i - start) < length) {
         if (j == lineLength) {
             fprintf(out, "\n");
             j = 0;
@@ -102,6 +104,35 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
         i++;
     }
     fprintf(out, "\n");
+}
+
+/**
+ * Extract and print a segments from the start position with length
+ * 
+ * @param self the container object
+ * @param out the output file 
+ * @param header the fasta header
+ * @param start the start position 
+ * @param length the segment length
+ * @param lineLength the length of the fasta line
+ */
+fasta_l getSegment(void * self, char *header, int start, int length) {
+    _CHECK_SELF_P(self);
+    fasta_l out = CreateFasta();
+    int size;
+
+    if (start < ((fasta_l) self)->len) {
+        if (start + length < ((fasta_l) self)->len) {
+            size = start + length;
+        } else {
+            size = ((fasta_l) self)->len - start;
+        }
+        out->setHeader(out, header);
+        out->setSeq(out, strndup((((fasta_l) self)->seq + start), size));
+        return out;
+    }
+
+    return NULL;
 }
 
 /**
@@ -143,7 +174,7 @@ void printOverlapSegments(void * self, FILE *out, int length, int offset, int li
             sprintf(header, "%s%d-%d|%s", header, i, i + length, ids[ids_number - 1]);
         }
         printSegment(self, out, header, i, length, lineLength);
-        if (i + length >= ((fasta_l) self)->length(self)) break;
+        if (i + length >= ((fasta_l) self)->len) break;
     }
 
     freeString(ids, ids_number);
@@ -184,12 +215,61 @@ void *thread_function(void *arg) {
             sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
         }
         printSegment(self, fd, header, i, parms->length, parms->lineLength);
-        if (i + parms->length >= ((fasta_l) self)->length(self)) break;
+        if (i + parms->length >= ((fasta_l) self)->len) break;
     }
 
     freeString(ids, ids_number);
     free(header);
     fclose(fd);
+}
+
+void *thread_functionInMem(void *arg) {
+    thread_param_t *parms = ((thread_param_t*) arg);
+    void * self = parms->self;
+    int i, index;
+    char **ids;
+    int ids_number;
+    size_t size = (strlen(((fasta_l) self)->header)) + 1000;
+    char *header = allocate(sizeof (char) * size, __FILE__, __LINE__);
+    void **res = NULL;
+    int resNumber = 0;
+    fasta_l fasta;
+
+    memset(header, 0, size);
+    ids_number = splitString(&ids, ((fasta_l) self)->header, "|");
+    if (ids_number % 2 == 0) {
+        strcpy(header, ((fasta_l) self)->header);
+        strcat(header, "|from-to|");
+    } else {
+        for (i = 0; i < ids_number - 1; i++) {
+            strcat(header, ids[i]);
+            strcat(header, "|");
+        }
+        strcat(header, "from-to|");
+    }
+
+    index = strlen(header);
+
+    index = strlen(header);
+    for (i = parms->start; i < parms->end; i += parms->offset) {
+        header[index] = '\0';
+        if (ids_number % 2 == 0) {
+            sprintf(header, "%s%d-%d", header, i, i + parms->length);
+        } else {
+            sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
+        }
+        fasta = getSegment(self, header, i, parms->length);
+        res = realloc(res, sizeof(void **) * (resNumber + 1));
+        checkPointerError(res, "Can't allocate memory",__FILE__, __LINE__, -1);
+        res[resNumber] = fasta;
+        resNumber++;
+        if (i + parms->length >= ((fasta_l) self)->len) break;
+    }
+
+    parms->res = res;
+    parms->resNumber = resNumber;
+    freeString(ids, ids_number);
+    free(header);
 }
 
 /**
@@ -201,44 +281,60 @@ void *thread_function(void *arg) {
  * @param offset the offset of the segments
  * @param lineLength the length of the fasta line
  * @param threads_number Number of threads
+ * @param inMem du the generation in memory
  */
-void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset, int lineLength, int threads_number) {
+void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem) {
     _CHECK_SELF_P(self);
-    int i, reads, numPerThread, thread_cr_res, thread_join_res;
+    int i, j, reads, numPerThread, thread_cr_res, thread_join_res;
     pthread_t *threads = allocate(sizeof (pthread_t) * threads_number, __FILE__, __LINE__);
     thread_param_t *tp = allocate(sizeof (thread_param_t) * threads_number, __FILE__, __LINE__);
-    char **tFiles = allocate(sizeof (char **) * threads_number, __FILE__, __LINE__);
+    char **tFiles = NULL;
     pid_t pid = getpid();
     size_t bytes;
     char buffer[SIZE];
     FILE *fd;
 
-    reads = ((fasta_l) self)->length(self) / offset;
+    if (inMem == 0) {
+        tFiles = allocate(sizeof (char **) * threads_number, __FILE__, __LINE__);
+    }
+
+    reads = ((fasta_l) self)->len / offset;
     numPerThread = reads / threads_number;
 
     for (i = 0; i < threads_number; i++) {
         printf("Creating thread: %d\n", i);
         fflush(NULL);
-        tFiles[i] = allocate(sizeof (char *) * 150, __FILE__, __LINE__);
-        sprintf(tFiles[i], "%d_%d.fna", pid, i);
+        if (inMem == 0) {
+            tFiles[i] = allocate(sizeof (char *) * 150, __FILE__, __LINE__);
+            sprintf(tFiles[i], "%d_%d.fna", pid, i);
+            tp[i].out = tFiles[i];
+        }
 
         tp[i].number = i;
         tp[i].length = length;
         tp[i].lineLength = lineLength;
         tp[i].offset = offset;
-        tp[i].out = tFiles[i];
         tp[i].self = self;
         tp[i].start = i * numPerThread * offset;
+        tp[i].res = NULL;
+        tp[i].resNumber = 0;
         if (i < threads_number - 1) {
             tp[i].end = (i + 1) * numPerThread * offset;
         } else {
-            tp[i].end = ((fasta_l) self)->length(self);
+            tp[i].end = ((fasta_l) self)->len;
         }
 
-        thread_cr_res = pthread_create(&threads[i],
-                NULL,
-                thread_function,
-                (void*) &(tp[i]));
+        if (inMem == 0) {
+            thread_cr_res = pthread_create(&threads[i],
+                    NULL,
+                    thread_function,
+                    (void*) &(tp[i]));
+        } else {
+            thread_cr_res = pthread_create(&threads[i],
+                    NULL,
+                    thread_functionInMem,
+                    (void*) &(tp[i]));
+        }
         if (thread_cr_res != 0) {
             checkPointerError(NULL, "THREAD CREATE ERROR", __FILE__, __LINE__, -1);
         }
@@ -251,19 +347,26 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
         if (thread_join_res != 0) {
             checkPointerError(NULL, "JOIN ERROR", __FILE__, __LINE__, -1);
         }
-        fd = fopen(tFiles[i], "r");
-        checkPointerError(fd, "Can't open temporal file", __FILE__, __LINE__, -1);
+        if (inMem == 0) {
+            fd = fopen(tFiles[i], "r");
+            checkPointerError(fd, "Can't open temporal file", __FILE__, __LINE__, -1);
 
-        while (0 < (bytes = fread(buffer, 1, sizeof (buffer), fd))) {
-            fwrite(buffer, 1, bytes, out);
+            while (0 < (bytes = fread(buffer, 1, sizeof (buffer), fd))) {
+                fwrite(buffer, 1, bytes, out);
+            }
+            fclose(fd);
+            remove(tFiles[i]);
+            if (tFiles[i]) free(tFiles[i]);
+        } else {
+            for (j = 0; j < tp[i].resNumber; i++) {
+                ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
+                ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
+            }
         }
-        fclose(fd);
-        remove(tFiles[i]);
-        if (tFiles[i]) free(tFiles[i]);
+
     }
     if (tp) free(tp);
     if (tFiles)free(tFiles);
-
     if (threads)free(threads);
 }
 
@@ -289,6 +392,7 @@ void setSeq(void *self, char *string) {
 
     _CHECK_SELF_P(self);
     ((fasta_l) self)->seq = strdup(string);
+    ((fasta_l) self)->len = strlen(string);
 }
 
 /**
@@ -314,6 +418,7 @@ fasta_l CreateFasta() {
 
     self->header = NULL;
     self->seq = NULL;
+    self->len = 0;
     self->toString = &toString;
     self->length = &length;
     self->free = &freeFasta;
@@ -355,6 +460,8 @@ fasta_l ReadFasta(FILE *fp) {
         pos = ftello(fp);
     }
 
+
+    self->len = self->length(self);
     if (line) free(line);
     return self;
 }
