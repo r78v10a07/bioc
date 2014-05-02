@@ -310,7 +310,7 @@ void *thread_functionInMem(void *arg) {
             sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
         }
         fasta = getSegment(self, header, i, parms->length);
-        printf("%d %d\n",parms->number, resNumber);
+        printf("%d %d\n",parms->number, resNumber);fflush(NULL);
         res = realloc(res, sizeof(void **) * (resNumber + 1));
         checkPointerError(res, "Can't allocate memory",__FILE__, __LINE__, -1);
         res[resNumber] = fasta;
