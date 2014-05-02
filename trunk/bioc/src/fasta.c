@@ -44,17 +44,17 @@ void toFile(void * self, FILE *out, int lineLength) {
     _CHECK_SELF_P(self);
     int i = 0;
     int j = 0;
-    char *tmp = allocate(sizeof(char) * (lineLength + 1),__FILE__, __LINE__);
+    char *tmp = allocate(sizeof (char) * (lineLength + 1), __FILE__, __LINE__);
     fprintf(out, ">%s\n", ((fasta_l) self)->header);
     for (i = 0; i < ((fasta_l) self)->len; i += lineLength) {
-        if (i + lineLength < ((fasta_l) self)->len){
-            strncpy(tmp,(((fasta_l) self)->seq + i),lineLength);            
-        }else{
-            strncpy(tmp,(((fasta_l) self)->seq + i),((fasta_l) self)->len - i);
+        if (i + lineLength < ((fasta_l) self)->len) {
+            strncpy(tmp, (((fasta_l) self)->seq + i), lineLength);
+        } else {
+            strncpy(tmp, (((fasta_l) self)->seq + i), ((fasta_l) self)->len - i);
         }
-        fprintf(out,"%s\n",tmp);
+        fprintf(out, "%s\n", tmp);
     }
-    free(tmp);/*
+    free(tmp); /*
     while (i < ((fasta_l) self)->len) {
         if (j == lineLength) {
             fprintf(out, "\n");
@@ -166,33 +166,22 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
  */
 fasta_l getSegment(void * self, char *header, int start, int length) {
     _CHECK_SELF_P(self);
-    fasta_l out = allocate(sizeof (struct fasta_s), __FILE__, __LINE__);
-
-    out->header = NULL;
-    out->seq = NULL;
-    out->len = 0;
-    out->toString = NULL;
-    out->length = NULL;
-    out->free = &freeFasta;
-    out->setHeader = &setHeader;
-    out->setSeq = &setSeq;
-    out->printOverlapSegments = NULL;
-    out->printSegment = NULL;
-    out->printOverlapSegmentsPthread = NULL;
-    out->toFile = &toFile;
+    fasta_l out = CreateFasta();
     int size;
+    char *tmp = allocate(sizeof (char) * (length + 1), __FILE__, __LINE__);
 
     if (start < ((fasta_l) self)->len) {
         if (start + length < ((fasta_l) self)->len) {
-            size = start + length;
+            size = length;
         } else {
             size = ((fasta_l) self)->len - start;
         }
         out->setHeader(out, header);
-        out->setSeq(out, strndup((((fasta_l) self)->seq + start), size));
+        strncpy(tmp,(((fasta_l) self)->seq + start), size);
+        out->setSeq(out, tmp);
         return out;
     }
-
+    free(tmp);
     return NULL;
 }
 
