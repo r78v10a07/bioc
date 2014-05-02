@@ -29,6 +29,7 @@ void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "-s,   --size                        The fasta line size (default: 80)\n");
     fprintf(stream, "-p,   --pthread                     The number of threads (default: 2)\n");
     fprintf(stream, "-t,   --split                       Split the result fasta file. Value in Gb (Ex: --split 2, not set for not split)\n");
+    fprintf(stream, "-m,   --mem                         Do the pthread work in memory\n");
     fprintf(stream, "********************************************************************************\n");
     fprintf(stream, "\n            Roberto Vera Alvarez (e-mail: r78v10a07@gmail.com)\n\n");
     fprintf(stream, "********************************************************************************\n");
@@ -43,9 +44,9 @@ int main(int argc, char** argv) {
 
     struct timespec start, stop;
     int next_option, verbose, write;
-    const char* const short_options = "hi:o:l:f:s:p:t:";
+    const char* const short_options = "hi:o:l:f:s:p:t:m";
     char *input, *output, *tmp;
-    int length, offset, size, threads, split, count, countWords;
+    int length, offset, size, threads, split, count, countWords, mem;
     FILE *fo;
     FILE *fd;
 
@@ -61,10 +62,11 @@ int main(int argc, char** argv) {
         { "size", 1, NULL, 's'},
         { "pthread", 1, NULL, 'p'},
         { "split", 1, NULL, 't'},
+        { "mem", 0, NULL, 'm'},
         { NULL, 0, NULL, 0} /* Required at end of array.  */
     };
 
-    write = verbose = split = countWords = count = 0;
+    write = verbose = split = countWords = count = mem = 0;
     input = output = tmp = NULL;
     size = 80;
     length = offset = 0;
@@ -103,6 +105,10 @@ int main(int argc, char** argv) {
             case 't':
                 split = atoi(optarg);
                 break;
+
+            case 'm':
+                mem = 1;
+                break;
         }
     } while (next_option != -1);
 
@@ -120,6 +126,7 @@ int main(int argc, char** argv) {
         fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
     }
     while ((fasta = ReadFasta(fd)) != NULL) {
+        printf("Read sequence of size: %d\n", fasta->len);
         if (split != 0) {
             countWords += fasta->length(fasta);
             if (countWords >= (split * 1024 * 1024 * 1024)) {
@@ -131,7 +138,7 @@ int main(int argc, char** argv) {
             }
         }
         if (threads != 0) {
-            fasta->printOverlapSegmentsPthread(fasta, fo, length, offset, size, threads);
+            fasta->printOverlapSegmentsPthread(fasta, fo, length, offset, size, threads, mem);
         } else {
             fasta->printOverlapSegments(fasta, fo, length, offset, size);
         }
