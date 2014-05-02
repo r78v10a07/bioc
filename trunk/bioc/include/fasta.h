@@ -18,6 +18,7 @@ extern "C" {
          */
         char *header;
         char *seq;
+        int len;
 
         /*
          * Methods
@@ -49,7 +50,7 @@ extern "C" {
          * @param lineLength the length of the fasta line
          */
         void (*printOverlapSegments)(void * self, FILE *out, int length, int offset, int lineLength);
-        
+
         /**
          * Creates segments of length with an overlap of offset using threads
          * 
@@ -59,8 +60,9 @@ extern "C" {
          * @param offset the offset of the segments
          * @param lineLength the length of the fasta line
          * @param threads_number Number of threads
+         * @param inMem du the generation in memory
          */
-        void (*printOverlapSegmentsPthread)(void * self, FILE *out, int length, int offset, int lineLength, int threads_number);
+        void (*printOverlapSegmentsPthread)(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem);
 
         /**
          * Extract and print a segments from the start position with length
