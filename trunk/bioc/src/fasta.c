@@ -179,6 +179,7 @@ fasta_l getSegment(void * self, char *header, int start, int length) {
             size = ((fasta_l) self)->len - start;
         }
         out->setHeader(out, header);
+        memset(tmp,0,sizeof (char) * (length + 1));
         strncpy(tmp,(((fasta_l) self)->seq + start), size);
         out->setSeq(out, tmp);
         return out;
