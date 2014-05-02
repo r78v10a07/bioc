@@ -48,7 +48,7 @@
           <linkerAddLib>
             <pElem>../bioc/dist/Debug/GNU-Linux-x86</pElem>
           </linkerAddLib>
-          <commandLine>-lbioc</commandLine>
+          <commandLine>-lbioc -lpthread</commandLine>
         </linkerTool>
         <requiredProjects>
           <makeArtifact PL="../bioc"
