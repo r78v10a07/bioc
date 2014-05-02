@@ -163,7 +163,7 @@ fasta_l getSegment(void * self, char *header, int start, int length) {
     out->len = 0;
     out->toString = NULL;
     out->length = NULL;
-    out->free = NULL;
+    out->free = &freeFasta;
     out->setHeader = &setHeader;
     out->setSeq = &setSeq;
     out->printOverlapSegments = NULL;
@@ -411,6 +411,7 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
             if (tFiles[i]) free(tFiles[i]);
         } else {
             for (j = 0; j < tp[i].resNumber; j++) {
+                
                 ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
                 ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
             }
