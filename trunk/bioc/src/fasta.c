@@ -44,8 +44,10 @@ void toFile(void * self, FILE *out, int lineLength) {
     _CHECK_SELF_P(self);
     int i = 0;
     int j = 0;
-    char *tmp = allocate(sizeof (char) * (lineLength + 1), __FILE__, __LINE__);
+    //char *tmp = allocate(sizeof (char) * (lineLength + 1), __FILE__, __LINE__);
     fprintf(out, ">%s\n", ((fasta_l) self)->header);
+    fprintf(out, "%s\n", ((fasta_l) self)->seq);
+    /*
     for (i = 0; i < ((fasta_l) self)->len; i += lineLength) {
         if (i + lineLength < ((fasta_l) self)->len) {
             strncpy(tmp, (((fasta_l) self)->seq + i), lineLength);
