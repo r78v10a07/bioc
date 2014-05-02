@@ -26,6 +26,7 @@ void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "-l,   --length                      The reads length\n");
     fprintf(stream, "-f,   --offset                      The overlaping offset\n");
     fprintf(stream, "-s,   --size                        The fasta line size (default: 80)\n");
+    fprintf(stream, "-p,   --pthread                     The number of threads (default: 2)\n");
     fprintf(stream, "********************************************************************************\n");
     fprintf(stream, "\n            Roberto Vera Alvarez (e-mail: r78v10a07@gmail.com)\n\n");
     fprintf(stream, "********************************************************************************\n");
@@ -40,9 +41,9 @@ int main(int argc, char** argv) {
 
     struct timespec start, stop;
     int next_option, verbose, write;
-    const char* const short_options = "hi:o:l:f:s:";
+    const char* const short_options = "hi:o:l:f:s:p:";
     char *input, *output;
-    int length, offset, size;
+    int length, offset, size, threads;
 
     clock_gettime(CLOCK_MONOTONIC, &start);
     program_name = argv[0];
@@ -54,6 +55,7 @@ int main(int argc, char** argv) {
         { "length", 1, NULL, 'l'},
         { "offset", 1, NULL, 'f'},
         { "size", 1, NULL, 's'},
+        { "pthread", 1, NULL, 'p'},
         { NULL, 0, NULL, 0} /* Required at end of array.  */
     };
 
@@ -61,6 +63,7 @@ int main(int argc, char** argv) {
     input = output = NULL;
     size = 80;
     length = offset = 0;
+    threads = 2;
     do {
         next_option = getopt_long(argc, argv, short_options, long_options, NULL);
 
@@ -87,6 +90,10 @@ int main(int argc, char** argv) {
             case 's':
                 size = atoi(optarg);
                 break;
+
+            case 'p':
+                threads = atoi(optarg);
+                break;
         }
     } while (next_option != -1);
 
@@ -94,19 +101,23 @@ int main(int argc, char** argv) {
         print_usage(stderr, -1);
     }
 
-    FILE *fd = checkPointerError(fopen(input, "r"),"Can't open input file",__FILE__,__LINE__, -1);
-    FILE *fo = checkPointerError(fopen(output, "w"),"Can't open output file",__FILE__,__LINE__, -1);
-    
-    while ((fasta = ReadFasta(fd)) != NULL) {
-        fasta->printOverlapSegments(fasta, fo, length, offset, size);
+    FILE *fd = checkPointerError(fopen(input, "r"), "Can't open input file", __FILE__, __LINE__, -1);
+    FILE *fo = checkPointerError(fopen(output, "w"), "Can't open output file", __FILE__, __LINE__, -1);
 
+    while ((fasta = ReadFasta(fd)) != NULL) {
+        if (threads != 0) {
+            fasta->printOverlapSegmentsPthread(fasta, fo, length, offset, size, threads);
+        }else{
+            fasta->printOverlapSegments(fasta, fo, length, offset, size);
+        }
         fasta->free(fasta);
     }
 
     fclose(fd);
     fclose(fo);
     if (input) free(input);
-    if (output) free(output);clock_gettime(CLOCK_MONOTONIC, &stop);
+    if (output) free(output);
+    clock_gettime(CLOCK_MONOTONIC, &stop);
     printf("\n\tThe total time was %lu sec\n\n", timespecDiff(&stop, &start) / 1000000000);
     return (EXIT_SUCCESS);
 }
