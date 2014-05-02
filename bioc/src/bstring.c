@@ -20,15 +20,17 @@
 size_t splitString(char ***dest, char *src, char *delimiter) {
     size_t count = 0;
     char *token;
+    char *srccpy = strdup(src);
 
     *dest = NULL;
-    token = strtok(src, delimiter);
+    token = strtok(srccpy, delimiter);
     while (token != NULL) {
         *dest = (char **) realloc(*dest, sizeof (char **) * (count + 1));
         checkPointerError(*dest, "Can't reallocate memory", __FILE__, __LINE__, -1);
         (*dest)[count++] = strdup(token);
         token = strtok(NULL, delimiter);
     }
+    if (srccpy)free(srccpy);
     return count;
 }
 
