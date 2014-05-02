@@ -15,6 +15,7 @@
 #include "memory.h"
 #include "bstring.h"
 #include "fasta.h"
+#include "error.h"
 
 #define SIZE 3072
 #define _CHECK_SELF_P(s) checkPointerError(s, "Null self pointer", __FILE__, __LINE__, -1)
@@ -157,8 +158,7 @@ void *thread_function(void *arg) {
     int ids_number;
     size_t size = (strlen(((fasta_l) self)->header)) + 1000;
     char *header = allocate(sizeof (char) * size, __FILE__, __LINE__);
-    FILE *fd = fopen(parms->out, "w");
-    checkPointerError(fd, "Can't open temporal file", __FILE__, __LINE__, -1);
+    FILE *fd = checkPointerError(fopen(parms->out, "w"), "Can't open temporal file", __FILE__, __LINE__, -1);
 
     memset(header, 0, size);
     ids_number = splitString(&ids, ((fasta_l) self)->header, "|");
