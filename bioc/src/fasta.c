@@ -411,6 +411,7 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
             remove(tFiles[i]);
             if (tFiles[i]) free(tFiles[i]);
         } else {
+            printf("%s %d\n",__LINE__, __FILE__); fflush(NULL);
             for (j = 0; j < tp[i].resNumber; j++) {
                 printf("%d %s %d\n",j,__LINE__, __FILE__);fflush(NULL);            
                 ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
