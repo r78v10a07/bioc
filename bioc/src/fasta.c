@@ -412,15 +412,21 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
             if (tFiles[i]) free(tFiles[i]);
         } else {
             for (j = 0; j < tp[i].resNumber; j++) {
+                printf("%d %s %d\n",j,__LINE__, __FILE__);fflush(NULL);            
                 ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
+                printf("%s %d\n",__LINE__, __FILE__); fflush(NULL);      
                 ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
+                printf("%s %d\n",__LINE__, __FILE__);  fflush(NULL);     
             }
         }
-
     }
+    printf("%s %d\n",__LINE__, __FILE__);fflush(NULL);   
     if (tp) free(tp);
+    printf("%s %d\n",__LINE__, __FILE__);fflush(NULL);   
     if (tFiles)free(tFiles);
+    printf("%s %d\n",__LINE__, __FILE__);fflush(NULL);   
     if (threads)free(threads);
+    printf("%s %d\n",__LINE__, __FILE__);fflush(NULL);   
 }
 
 /**
