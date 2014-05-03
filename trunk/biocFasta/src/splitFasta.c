@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
     if (input) free(input);
     if (output) free(output);
     clock_gettime(CLOCK_MONOTONIC, &stop);
-    printf("\n\tThe total time was %lu sec\n\n", timespecDiff(&stop, &start) / 1000000000);
+    printf("\n\tThe total time was %lu sec\n\n", timespecDiff(&stop, &start) / CLOCKS_PER_SEC);
     return (EXIT_SUCCESS);
 }
 

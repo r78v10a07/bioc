@@ -43,12 +43,13 @@
           <incDir>
             <pElem>../bioc/include</pElem>
           </incDir>
+          <commandLine>-O2</commandLine>
         </cTool>
         <linkerTool>
           <linkerAddLib>
             <pElem>../bioc/dist/Debug/GNU-Linux-x86</pElem>
           </linkerAddLib>
-          <commandLine>-lbioc -lpthread -lrt</commandLine>
+          <commandLine>-lbioc -lpthread -lrt -O2</commandLine>
         </linkerTool>
         <requiredProjects>
           <makeArtifact PL="../bioc"
