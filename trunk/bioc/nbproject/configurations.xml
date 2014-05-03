@@ -69,6 +69,7 @@
           <incDir>
             <pElem>include</pElem>
           </incDir>
+          <commandLine>-O2</commandLine>
         </cTool>
         <archiverTool>
         </archiverTool>
