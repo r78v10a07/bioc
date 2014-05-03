@@ -159,7 +159,7 @@ fasta_l getSegment(void * self, char *header, int start, int length) {
     _CHECK_SELF_P(self);
     fasta_l out = CreateFasta();
     int size;
-    char *tmp = allocate(sizeof (char) * (length + 1), __FILE__, __LINE__);
+    char *tmp;
 
     if (start < ((fasta_l) self)->len) {
         if (start + length < ((fasta_l) self)->len) {
@@ -168,12 +168,13 @@ fasta_l getSegment(void * self, char *header, int start, int length) {
             size = ((fasta_l) self)->len - start;
         }
         out->setHeader(out, header);
+        tmp = allocate(sizeof (char) * (length + 1), __FILE__, __LINE__);
         memset(tmp, 0, sizeof (char) * (length + 1));
         strncpy(tmp, (((fasta_l) self)->seq + start), size);
         out->setSeq(out, tmp);
+        free(tmp);
         return out;
     }
-    free(tmp);
     return NULL;
 }
 
@@ -404,6 +405,7 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
                 ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
                 ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
             }
+            free(tp[i].res);
         }
     }
     if (tp) free(tp);
