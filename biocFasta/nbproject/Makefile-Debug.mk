@@ -69,6 +69,7 @@ ${OBJECTDIR}/src/splitFasta.o: src/splitFasta.c
 
 # Subprojects
 .build-subprojects:
+	cd ../bioc && ${MAKE}  -f Makefile CONF=Debug
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
@@ -77,6 +78,7 @@ ${OBJECTDIR}/src/splitFasta.o: src/splitFasta.c
 
 # Subprojects
 .clean-subprojects:
+	cd ../bioc && ${MAKE}  -f Makefile CONF=Debug clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl
