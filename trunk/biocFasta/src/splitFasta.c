@@ -21,6 +21,7 @@ void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "\n********************************************************************************\n");
     fprintf(stream, "\nUsage: %s \n", program_name);
     fprintf(stream, "\n\n%s options:\n\n", program_name);
+    fprintf(stream, "-v,   --verbose                     Print info\n");
     fprintf(stream, "-h,   --help                        Display this usage information.\n");
     fprintf(stream, "-i,   --input                       The input fasta file\n");
     fprintf(stream, "-o,   --output                      The output fasta file\n");
@@ -30,6 +31,7 @@ void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "-p,   --pthread                     The number of threads (default: 2)\n");
     fprintf(stream, "-t,   --split                       Split the result fasta file. Value in Gb (Ex: --split 2, not set for not split)\n");
     fprintf(stream, "-m,   --mem                         Do the pthread work in memory\n");
+    fprintf(stream, "-n,   --name                        Just rename fasta file\n");
     fprintf(stream, "********************************************************************************\n");
     fprintf(stream, "\n            Roberto Vera Alvarez (e-mail: r78v10a07@gmail.com)\n\n");
     fprintf(stream, "********************************************************************************\n");
@@ -43,18 +45,21 @@ int main(int argc, char** argv) {
     fasta_l fasta;
 
     struct timespec start, stop;
-    int next_option, verbose, write;
-    const char* const short_options = "hi:o:l:f:s:p:t:m";
+    int i, next_option, verbose, write;
+    const char* const short_options = "vhi:o:l:f:s:p:t:mn";
     char *input, *output, *tmp;
-    int length, offset, size, threads, split, count, countWords, mem;
+    int length, offset, size, threads, split, count, countWords, mem, name;
     FILE *fo;
     FILE *fd;
+    char **ids = NULL;
+    int ids_number, gi, fromTo;
 
     clock_gettime(CLOCK_MONOTONIC, &start);
     program_name = argv[0];
 
     const struct option long_options[] = {
         { "help", 0, NULL, 'h'},
+        { "verbose", 0, NULL, 'v'},
         { "input", 1, NULL, 'i'},
         { "output", 1, NULL, 'o'},
         { "length", 1, NULL, 'l'},
@@ -63,13 +68,14 @@ int main(int argc, char** argv) {
         { "pthread", 1, NULL, 'p'},
         { "split", 1, NULL, 't'},
         { "mem", 0, NULL, 'm'},
+        { "name", 0, NULL, 'n'},
         { NULL, 0, NULL, 0} /* Required at end of array.  */
     };
 
     write = verbose = split = countWords = count = mem = 0;
     input = output = tmp = NULL;
     size = 80;
-    length = offset = 0;
+    length = offset = name = 0;
     threads = 2;
     do {
         next_option = getopt_long(argc, argv, short_options, long_options, NULL);
@@ -77,6 +83,10 @@ int main(int argc, char** argv) {
         switch (next_option) {
             case 'h':
                 print_usage(stdout, 0);
+
+            case 'v':
+                verbose = 1;
+                break;
 
             case 'o':
                 output = strdup(optarg);
@@ -109,10 +119,14 @@ int main(int argc, char** argv) {
             case 'm':
                 mem = 1;
                 break;
+
+            case 'n':
+                name = 1;
+                break;
         }
     } while (next_option != -1);
 
-    if (!input || !output || length <= 0 || offset <= 0 || size <= 0) {
+    if (!input || !output || ((length <= 0 || offset <= 0 || size <= 0) && name == 0)) {
         print_usage(stderr, -1);
     }
 
@@ -126,23 +140,48 @@ int main(int argc, char** argv) {
         fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
     }
     while ((fasta = ReadFasta(fd)) != NULL) {
-        printf("Read sequence of size: %d\n", fasta->len);
-        if (split != 0) {
-            countWords += fasta->length(fasta);
-            if (countWords >= (split * 1024 * 1024 * 1024)) {
-                count++;
-                countWords = fasta->length(fasta);
-                fclose(fo);
-                sprintf(tmp, "%s_%d.fna", output, count);
-                fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
+        if (verbose) printf("Read sequence of size: %d\n", fasta->len);
+        if (name == 0) {
+            if (split != 0) {
+                countWords += fasta->length(fasta);
+                if (countWords >= (split * 1024 * 1024 * 1024)) {
+                    count++;
+                    countWords = fasta->length(fasta);
+                    fclose(fo);
+                    sprintf(tmp, "%s_%d.fna", output, count);
+                    fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
+                }
             }
-        }
-        if (threads != 0) {
-            fasta->printOverlapSegmentsPthread(fasta, fo, length, offset, size, threads, mem);
+            if (threads != 0) {
+                fasta->printOverlapSegmentsPthread(fasta, fo, length, offset, size, threads, mem);
+            } else {
+                fasta->printOverlapSegments(fasta, fo, length, offset, size);
+            }
         } else {
-            fasta->printOverlapSegments(fasta, fo, length, offset, size);
+            gi = fromTo = -1;
+            ids_number = splitString(&ids, ((fasta_l) fasta)->header, "|");
+            for (i = 0; i < ids_number; i++) {
+                if (strcmp(ids[i], "gi") == 0) {
+                    gi = i + 1;
+                }
+                if (strcmp(ids[i], "from-to") == 0) {
+                    fromTo = i + 1;
+                }
+            }
+            if (gi == -1 || gi >= ids_number || fromTo == -1 || fromTo >= ids_number) {
+                fasta->toString(fasta, size);
+                checkPointerError(NULL, "Error reading header", __FILE__, __LINE__, -1);
+            }
+            memset(fasta->header, 0, strlen(fasta->header));
+            sprintf(fasta->header, "%s|%s", ids[gi], ids[fromTo]);
+            fasta->toFile(fasta, fo, size);
+
+            for (i = 0; i < ids_number; i++) {
+                free(ids[i]);
+            }
+            free(ids);
         }
-        fasta->free(fasta); 
+        fasta->free(fasta);
     }
 
     fclose(fd);
