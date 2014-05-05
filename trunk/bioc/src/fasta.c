@@ -279,6 +279,9 @@ void *thread_functionInMem(void *arg) {
     fasta_l fasta;
 
     memset(header, 0, size);
+    strcpy(header,((fasta_l) self)->header);
+    strcat(header, "|from-to|");
+    
     ids_number = splitString(&ids, ((fasta_l) self)->header, "|");
     if (ids_number % 2 == 0) {
         strcpy(header, ((fasta_l) self)->header);
@@ -291,16 +294,14 @@ void *thread_functionInMem(void *arg) {
         strcat(header, "from-to|");
     }
 
-    index = strlen(header);
-
-    index = strlen(header);
+    index = strlen(header);     
     for (i = parms->start; i < parms->end; i += parms->offset) {
         header[index] = '\0';
-        if (ids_number % 2 == 0) {
+        //if (ids_number % 2 == 0) {
             sprintf(header, "%s%d-%d", header, i, i + parms->length);
-        } else {
-            sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
-        }
+       // } else {
+        //    sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
+       // }
         fasta = getSegment(self, header, i, parms->length);
         res = realloc(res, sizeof (void **) * (resNumber + 1));
         checkPointerError(res, "Can't allocate memory", __FILE__, __LINE__, -1);
