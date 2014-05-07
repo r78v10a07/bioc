@@ -42,7 +42,6 @@ typedef struct thread_param {
 void toFile(void * self, FILE *out, int lineLength) {
     _CHECK_SELF_P(self);
     int i = 0;
-    int j = 0;
     char *tmp = allocate(sizeof (char) * (lineLength + 1), __FILE__, __LINE__);
     fprintf(out, ">%s\n", ((fasta_l) self)->header);
     for (i = 0; i < ((fasta_l) self)->len; i += lineLength) {
@@ -263,6 +262,7 @@ void *thread_function(void *arg) {
     freeString(ids, ids_number);
     free(header);
     fclose(fd);
+    return NULL;
 }
 
 void *thread_functionInMem(void *arg) {
@@ -313,6 +313,7 @@ void *thread_functionInMem(void *arg) {
     parms->resNumber = resNumber;
     freeString(ids, ids_number);
     free(header);
+    return NULL;
 }
 
 /**
@@ -449,7 +450,7 @@ fasta_l ReadFasta(FILE *fp) {
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
-    off_t pos;
+    off_t pos = 0;
 
     while ((read = getline(&line, &len, fp)) != -1) {
         if (strncmp(line, ">", 1) == 0) {
