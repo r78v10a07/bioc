@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux-x86
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86
-CND_ARTIFACT_NAME_Debug=biocfasta
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/biocfasta
+CND_ARTIFACT_NAME_Debug=splitfastafile
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/splitfastafile
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Debug=biocfasta.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/biocfasta.tar
+CND_PACKAGE_NAME_Debug=splitfastafile.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/splitfastafile.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
-CND_ARTIFACT_NAME_Release=biocfasta
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/biocfasta
+CND_ARTIFACT_NAME_Release=splitfastafile
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/splitfastafile
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Release=biocfasta.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/biocfasta.tar
+CND_PACKAGE_NAME_Release=splitfastafile.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/splitfastafile.tar
 #
 # include compiler specific variables
 #

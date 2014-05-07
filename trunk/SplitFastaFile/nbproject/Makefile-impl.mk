@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=biocFasta
+PROJECTNAME=SplitFastaFile
 
 # Active Configuration
 DEFAULTCONF=Debug
