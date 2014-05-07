@@ -16,6 +16,7 @@
 #include "bstring.h"
 #include "berror.h"
 #include "btree.h"
+#include "btime.h"
 #include "taxonomy.h"
 
 /**
@@ -159,7 +160,7 @@ taxonomy_l ReadTaxonomy(FILE *nodes, FILE *names) {
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
-    off_t pos;
+    off_t pos = 0;
     char **ids;
     int ids_number;
 

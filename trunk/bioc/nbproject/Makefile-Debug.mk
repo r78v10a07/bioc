@@ -53,7 +53,7 @@ TESTFILES= \
 	${TESTDIR}/TestFiles/f2
 
 # C Compiler Flags
-CFLAGS=-O2
+CFLAGS=-O2 -Wall
 
 # CC Compiler Flags
 CCFLAGS=

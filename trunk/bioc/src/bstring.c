@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "berror.h"
 
 /**
  * Split a string into a array of string using the delimiter
