@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux-x86
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86
-CND_ARTIFACT_NAME_Debug=bioctaxonomy
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/bioctaxonomy
+CND_ARTIFACT_NAME_Debug=bioctaxlineagefromgi
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/bioctaxlineagefromgi
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Debug=bioctaxonomy.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/bioctaxonomy.tar
+CND_PACKAGE_NAME_Debug=bioctaxlineagefromgi.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/bioctaxlineagefromgi.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
-CND_ARTIFACT_NAME_Release=bioctaxonomy
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/bioctaxonomy
+CND_ARTIFACT_NAME_Release=bioctaxlineagefromgi
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/bioctaxlineagefromgi
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Release=bioctaxonomy.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/bioctaxonomy.tar
+CND_PACKAGE_NAME_Release=bioctaxlineagefromgi.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/bioctaxlineagefromgi.tar
 #
 # include compiler specific variables
 #

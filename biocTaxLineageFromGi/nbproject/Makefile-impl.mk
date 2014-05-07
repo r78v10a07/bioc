@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=biocTaxonomy
+PROJECTNAME=biocTaxLineageFromGi
 
 # Active Configuration
 DEFAULTCONF=Debug
