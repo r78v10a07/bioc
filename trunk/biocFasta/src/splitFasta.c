@@ -14,6 +14,7 @@
 #include "btime.h"
 #include "berror.h"
 #include "bmemory.h"
+#include "bstring.h"
 
 char *program_name;
 
@@ -45,7 +46,7 @@ int main(int argc, char** argv) {
     fasta_l fasta;
 
     struct timespec start, stop;
-    int i, next_option, verbose, write;
+    int i, next_option, verbose;
     const char* const short_options = "vhi:o:l:f:s:p:t:mn";
     char *input, *output, *tmp;
     int length, offset, size, threads, split, count, countWords, mem, name;
@@ -72,7 +73,7 @@ int main(int argc, char** argv) {
         { NULL, 0, NULL, 0} /* Required at end of array.  */
     };
 
-    write = verbose = split = countWords = count = mem = 0;
+    verbose = split = countWords = count = mem = 0;
     input = output = tmp = NULL;
     size = 80;
     length = offset = name = 0;

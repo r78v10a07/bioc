@@ -43,7 +43,7 @@
           <incDir>
             <pElem>../bioc/include</pElem>
           </incDir>
-          <commandLine>-O2</commandLine>
+          <commandLine>-O2 -Wall</commandLine>
         </cTool>
         <linkerTool>
           <linkerAddLib>
