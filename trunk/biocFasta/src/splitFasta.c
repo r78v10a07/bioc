@@ -10,11 +10,14 @@
 #include <string.h>
 #include <getopt.h>
 #include <time.h>
-#include "fasta.h"
+#include <zlib.h>
+#include <stdbool.h>
+#include "btree.h"
 #include "btime.h"
 #include "berror.h"
 #include "bmemory.h"
 #include "bstring.h"
+#include "fasta.h"
 
 char *program_name;
 
@@ -140,7 +143,7 @@ int main(int argc, char** argv) {
         sprintf(tmp, "%s_%d.fna", output, count);
         fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
     }
-    while ((fasta = ReadFasta(fd)) != NULL) {
+    while ((fasta = ReadFasta(fd, 0)) != NULL) {
         if (verbose) printf("Read sequence of size: %d\n", fasta->len);
         if (name == 0) {
             if (split != 0) {
