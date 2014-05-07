@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux-x86
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86
-CND_ARTIFACT_NAME_Debug=biocbuildbtreeindexfasta
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/biocbuildbtreeindexfasta
+CND_ARTIFACT_NAME_Debug=buildbtreeindexfasta
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/buildbtreeindexfasta
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Debug=biocbuildbtreeindexfasta.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/biocbuildbtreeindexfasta.tar
+CND_PACKAGE_NAME_Debug=buildbtreeindexfasta.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/buildbtreeindexfasta.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
-CND_ARTIFACT_NAME_Release=biocbuildbtreeindexfasta
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/biocbuildbtreeindexfasta
+CND_ARTIFACT_NAME_Release=buildbtreeindexfasta
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/buildbtreeindexfasta
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Release=biocbuildbtreeindexfasta.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/biocbuildbtreeindexfasta.tar
+CND_PACKAGE_NAME_Release=buildbtreeindexfasta.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/buildbtreeindexfasta.tar
 #
 # include compiler specific variables
 #
