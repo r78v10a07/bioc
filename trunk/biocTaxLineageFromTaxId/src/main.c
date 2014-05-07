@@ -181,6 +181,8 @@ int main(int argc, char** argv) {
                     lineage_count = 0;
                 }
             }
+        }else{
+            printf("%d\n",taxId);
         }
     }
 
