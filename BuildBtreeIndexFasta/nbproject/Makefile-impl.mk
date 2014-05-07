@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=biocBuildBtreeIndexFasta
+PROJECTNAME=BuildBtreeIndexFasta
 
 # Active Configuration
 DEFAULTCONF=Debug
