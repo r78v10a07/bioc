@@ -241,7 +241,6 @@ node *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose) {
             printf("\tReading GIs: Total: %10d\t\tTime: %lu   \r", count, timespecDiffSec(&stop, &start));
         }
         count++;
-        if (count == 10000000) break;
     }
 
     if (buffer) free(buffer);
