@@ -56,11 +56,11 @@ LDLIBSOPTIONS=-L../bioc/dist/Debug/GNU-Linux-x86
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bioctaxlineagefromtaxid
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/taxlineagefromtaxid
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bioctaxlineagefromtaxid: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/taxlineagefromtaxid: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bioctaxlineagefromtaxid ${OBJECTFILES} ${LDLIBSOPTIONS} -lbioc -lpthread -lrt -O2 -lz
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/taxlineagefromtaxid ${OBJECTFILES} ${LDLIBSOPTIONS} -lbioc -lpthread -lrt -O2 -lz
 
 ${OBJECTDIR}/src/main.o: src/main.c 
 	${MKDIR} -p ${OBJECTDIR}/src
@@ -74,7 +74,7 @@ ${OBJECTDIR}/src/main.o: src/main.c
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bioctaxlineagefromtaxid
+	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/taxlineagefromtaxid
 
 # Subprojects
 .clean-subprojects:
