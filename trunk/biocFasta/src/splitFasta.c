@@ -12,8 +12,8 @@
 #include <time.h>
 #include "fasta.h"
 #include "btime.h"
-#include "error.h"
-#include "memory.h"
+#include "berror.h"
+#include "bmemory.h"
 
 char *program_name;
 
@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
     if (input) free(input);
     if (output) free(output);
     clock_gettime(CLOCK_MONOTONIC, &stop);
-    printf("\n\tThe total time was %lu sec\n\n", timespecDiff(&stop, &start) / CLOCKS_PER_SEC);
+    printf("\n\tThe total time was %lu sec\n\n", timespecDiffSec(&stop, &start));
     return (EXIT_SUCCESS);
 }
 

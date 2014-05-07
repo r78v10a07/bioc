@@ -60,7 +60,7 @@ LDLIBSOPTIONS=-L../bioc/dist/Debug/GNU-Linux-x86
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/biocfasta: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/biocfasta ${OBJECTFILES} ${LDLIBSOPTIONS} -lbioc -lpthread -lrt -O2
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/biocfasta ${OBJECTFILES} ${LDLIBSOPTIONS} -lbioc -lpthread -lrt -O2 -lz
 
 ${OBJECTDIR}/src/splitFasta.o: src/splitFasta.c 
 	${MKDIR} -p ${OBJECTDIR}/src
