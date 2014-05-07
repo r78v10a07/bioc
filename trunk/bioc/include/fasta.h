@@ -111,8 +111,19 @@ extern "C" {
 
     typedef struct fasta_s *fasta_l;
 
+    /**
+     * Create the Fasta object and initialized the pointers to the methods
+     * 
+     * @return a fasta_l object
+     */
     extern fasta_l CreateFasta();
 
+    /**
+     * Read a fasta entry from the file
+     * 
+     * @param fp the input file
+     * @return the fasta entry
+     */
     extern fasta_l ReadFasta(FILE *fp);
 
 #ifdef	__cplusplus

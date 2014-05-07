@@ -35,11 +35,13 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/src/berror.o \
+	${OBJECTDIR}/src/bmemory.o \
 	${OBJECTDIR}/src/bstring.o \
 	${OBJECTDIR}/src/btime.o \
-	${OBJECTDIR}/src/error.o \
+	${OBJECTDIR}/src/btree.o \
 	${OBJECTDIR}/src/fasta.o \
-	${OBJECTDIR}/src/memory.o
+	${OBJECTDIR}/src/taxonomy.o
 
 # Test Directory
 TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
@@ -76,6 +78,16 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libbioc.a: ${OBJECTFILES}
 	${AR} -rv ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libbioc.a ${OBJECTFILES} 
 	$(RANLIB) ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libbioc.a
 
+${OBJECTDIR}/src/berror.o: src/berror.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/berror.o src/berror.c
+
+${OBJECTDIR}/src/bmemory.o: src/bmemory.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/bmemory.o src/bmemory.c
+
 ${OBJECTDIR}/src/bstring.o: src/bstring.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
@@ -86,20 +98,20 @@ ${OBJECTDIR}/src/btime.o: src/btime.c
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/btime.o src/btime.c
 
-${OBJECTDIR}/src/error.o: src/error.c 
+${OBJECTDIR}/src/btree.o: src/btree.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/error.o src/error.c
+	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/btree.o src/btree.c
 
 ${OBJECTDIR}/src/fasta.o: src/fasta.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/fasta.o src/fasta.c
 
-${OBJECTDIR}/src/memory.o: src/memory.c 
+${OBJECTDIR}/src/taxonomy.o: src/taxonomy.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/memory.o src/memory.c
+	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/taxonomy.o src/taxonomy.c
 
 # Subprojects
 .build-subprojects:
@@ -137,6 +149,32 @@ ${TESTDIR}/tests/memorytest.o: tests/memorytest.c
 	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${TESTDIR}/tests/memorytest.o tests/memorytest.c
 
 
+${OBJECTDIR}/src/berror_nomain.o: ${OBJECTDIR}/src/berror.o src/berror.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/berror.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/berror_nomain.o src/berror.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/src/berror.o ${OBJECTDIR}/src/berror_nomain.o;\
+	fi
+
+${OBJECTDIR}/src/bmemory_nomain.o: ${OBJECTDIR}/src/bmemory.o src/bmemory.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/bmemory.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/bmemory_nomain.o src/bmemory.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/src/bmemory.o ${OBJECTDIR}/src/bmemory_nomain.o;\
+	fi
+
 ${OBJECTDIR}/src/bstring_nomain.o: ${OBJECTDIR}/src/bstring.o src/bstring.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/bstring.o`; \
@@ -163,17 +201,17 @@ ${OBJECTDIR}/src/btime_nomain.o: ${OBJECTDIR}/src/btime.o src/btime.c
 	    ${CP} ${OBJECTDIR}/src/btime.o ${OBJECTDIR}/src/btime_nomain.o;\
 	fi
 
-${OBJECTDIR}/src/error_nomain.o: ${OBJECTDIR}/src/error.o src/error.c 
+${OBJECTDIR}/src/btree_nomain.o: ${OBJECTDIR}/src/btree.o src/btree.c 
 	${MKDIR} -p ${OBJECTDIR}/src
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/error.o`; \
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/btree.o`; \
 	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/error_nomain.o src/error.c;\
+	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/btree_nomain.o src/btree.c;\
 	else  \
-	    ${CP} ${OBJECTDIR}/src/error.o ${OBJECTDIR}/src/error_nomain.o;\
+	    ${CP} ${OBJECTDIR}/src/btree.o ${OBJECTDIR}/src/btree_nomain.o;\
 	fi
 
 ${OBJECTDIR}/src/fasta_nomain.o: ${OBJECTDIR}/src/fasta.o src/fasta.c 
@@ -189,17 +227,17 @@ ${OBJECTDIR}/src/fasta_nomain.o: ${OBJECTDIR}/src/fasta.o src/fasta.c
 	    ${CP} ${OBJECTDIR}/src/fasta.o ${OBJECTDIR}/src/fasta_nomain.o;\
 	fi
 
-${OBJECTDIR}/src/memory_nomain.o: ${OBJECTDIR}/src/memory.o src/memory.c 
+${OBJECTDIR}/src/taxonomy_nomain.o: ${OBJECTDIR}/src/taxonomy.o src/taxonomy.c 
 	${MKDIR} -p ${OBJECTDIR}/src
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/memory.o`; \
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/taxonomy.o`; \
 	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/memory_nomain.o src/memory.c;\
+	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/taxonomy_nomain.o src/taxonomy.c;\
 	else  \
-	    ${CP} ${OBJECTDIR}/src/memory.o ${OBJECTDIR}/src/memory_nomain.o;\
+	    ${CP} ${OBJECTDIR}/src/taxonomy.o ${OBJECTDIR}/src/taxonomy_nomain.o;\
 	fi
 
 # Run Test Targets

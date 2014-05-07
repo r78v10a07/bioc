@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "error.h"
+#include "berror.h"
 
 /**
  * The function allocates memory of size bytes
