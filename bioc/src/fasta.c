@@ -12,13 +12,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <pthread.h>
-#include "memory.h"
+#include "bmemory.h"
 #include "bstring.h"
 #include "fasta.h"
-#include "error.h"
+#include "berror.h"
 
 #define SIZE 3072
-#define _CHECK_SELF_P(s) checkPointerError(s, "Null self pointer", __FILE__, __LINE__, -1)
 
 typedef struct thread_param {
     int number;
@@ -47,7 +46,7 @@ void toFile(void * self, FILE *out, int lineLength) {
     char *tmp = allocate(sizeof (char) * (lineLength + 1), __FILE__, __LINE__);
     fprintf(out, ">%s\n", ((fasta_l) self)->header);
     for (i = 0; i < ((fasta_l) self)->len; i += lineLength) {
-        memset(tmp,0,sizeof (char) * (lineLength + 1));
+        memset(tmp, 0, sizeof (char) * (lineLength + 1));
         if (i + lineLength < ((fasta_l) self)->len) {
             strncpy(tmp, (((fasta_l) self)->seq + i), lineLength);
         } else {
@@ -279,9 +278,9 @@ void *thread_functionInMem(void *arg) {
     fasta_l fasta;
 
     memset(header, 0, size);
-    strcpy(header,((fasta_l) self)->header);
+    strcpy(header, ((fasta_l) self)->header);
     strcat(header, "|from-to|");
-    
+
     ids_number = splitString(&ids, ((fasta_l) self)->header, "|");
     if (ids_number % 2 == 0) {
         strcpy(header, ((fasta_l) self)->header);
@@ -294,14 +293,14 @@ void *thread_functionInMem(void *arg) {
         strcat(header, "from-to|");
     }
 
-    index = strlen(header);     
+    index = strlen(header);
     for (i = parms->start; i < parms->end; i += parms->offset) {
         header[index] = '\0';
         //if (ids_number % 2 == 0) {
-            sprintf(header, "%s%d-%d", header, i, i + parms->length);
-       // } else {
+        sprintf(header, "%s%d-%d", header, i, i + parms->length);
+        // } else {
         //    sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
-       // }
+        // }
         fasta = getSegment(self, header, i, parms->length);
         res = realloc(res, sizeof (void **) * (resNumber + 1));
         checkPointerError(res, "Can't allocate memory", __FILE__, __LINE__, -1);
@@ -438,6 +437,12 @@ fasta_l CreateFasta() {
     return self;
 }
 
+/**
+ * Read a fasta entry from the file
+ * 
+ * @param fp the input file
+ * @return the fasta entry
+ */
 fasta_l ReadFasta(FILE *fp) {
     fasta_l self = NULL;
 

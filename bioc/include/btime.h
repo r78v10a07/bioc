@@ -13,6 +13,8 @@ extern "C" {
 #endif
 
     extern int64_t timespecDiff(struct timespec *timeA_p, struct timespec *timeB_p);
+    
+    extern int64_t timespecDiffSec(struct timespec *timeA_p, struct timespec *timeB_p);
 
 #ifdef	__cplusplus
 }

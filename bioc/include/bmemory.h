@@ -11,6 +11,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+    
+    #define _CHECK_SELF_P(s) checkPointerError(s, "Null self pointer", __FILE__, __LINE__, -1)
 
     /**
      * The function allocates memory of size bytes
