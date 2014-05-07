@@ -6,16 +6,21 @@
  */
 
 #define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <stdbool.h>
+#include <zlib.h>
 #include "bmemory.h"
 #include "bstring.h"
-#include "fasta.h"
 #include "berror.h"
+#include "btree.h"
+#include "btime.h"
+#include "fasta.h"
 
 #define SIZE 3072
 
@@ -88,6 +93,27 @@ void setHeader(void *self, char *string) {
 
     _CHECK_SELF_P(self);
     ((fasta_l) self)->header = strdup(string);
+}
+
+/**
+ * Get the Gi parsing the fasta header
+ * 
+ * @param self the container object
+ * @param gi the return gi, -1 if not Gi is present
+ */
+void getGi(void *self, int *gi) {
+    char **ids;
+    int i, ids_number;
+
+    *gi = -1;
+    ids_number = splitString(&ids, ((fasta_l) self)->header, "|");
+    for (i = 0; i < ids_number; i++) {
+        if (strcmp(ids[i], "gi") == 0 && i < ids_number - 1) {
+            *gi = atoi(ids[i + 1]);
+            break;
+        }
+    }
+    freeString(ids, ids_number);
 }
 
 /**
@@ -434,6 +460,7 @@ fasta_l CreateFasta() {
     self->printSegment = &printSegment;
     self->printOverlapSegmentsPthread = &printOverlapSegmentsPthread;
     self->toFile = &toFile;
+    self->getGi = &getGi;
 
     return self;
 }
@@ -442,9 +469,10 @@ fasta_l CreateFasta() {
  * Read a fasta entry from the file
  * 
  * @param fp the input file
+ * @param excludeSeq 1 if you want to exclude the sequence 
  * @return the fasta entry
  */
-fasta_l ReadFasta(FILE *fp) {
+fasta_l ReadFasta(FILE *fp, int excludeSeq) {
     fasta_l self = NULL;
 
     char *line = NULL;
@@ -461,7 +489,7 @@ fasta_l ReadFasta(FILE *fp) {
                 fseeko(fp, pos, SEEK_SET);
                 break;
             }
-        } else {
+        } else if (!excludeSeq) {
             checkPointerError(self, "The fasta file does not start with the header (>)", __FILE__, __LINE__, -1);
             if (self->seq == NULL) {
                 self->seq = strndup(line, strlen(line) - 1);
@@ -474,10 +502,147 @@ fasta_l ReadFasta(FILE *fp) {
     }
 
 
+    if (self != NULL && self->seq != NULL) {
+        self->len = self->length(self);
+    }
+    if (line) free(line);
+    return self;
+}
+
+/**
+ * Read a fasta entry from the file
+ * 
+ * @param fp the input file
+ * @param excludeSeq 1 if you want to exclude the sequence 
+ * @return the fasta entry
+ */
+fasta_l ReadFastaGzip(gzFile fp, int excludeSeq) {
+    fasta_l self = NULL;
+
+    char *line = NULL;
+    z_off_t pos = 0;
+
+    line = allocate(sizeof (char) * 1000, __FILE__, __LINE__);
+    while (!gzeof(fp)) {
+        if (strncmp(line, ">", 1) == 0) {
+            if (self == NULL) {
+                self = CreateFasta();
+                self->header = strndup(line + 1, strlen(line) - 2);
+            } else {
+                gzseek(fp, pos, SEEK_SET);
+                break;
+            }
+        } else if (!excludeSeq) {
+            checkPointerError(self, "The fasta file does not start with the header (>)", __FILE__, __LINE__, -1);
+            if (self->seq == NULL) {
+                self->seq = strndup(line, strlen(line) - 1);
+            } else {
+                self->seq = reallocate(self->seq, strlen(self->seq) + strlen(line) + 1, __FILE__, __LINE__);
+                strncat(self->seq, line, strlen(line) - 1);
+            }
+        }
+        pos = gztell(fp);
+    }
+
+
     if (self != NULL) {
         self->len = self->length(self);
     }
     if (line) free(line);
     return self;
+}
+
+/**
+ * Create the fasta index file which include the gi and the offset position
+ * 
+ * @param fd the input fasta file
+ * @param fo the output binary file
+ * @param verbose 1 to print info
+ * @return the number of elements read
+ */
+int CreateFastaIndex(FILE *fd, FILE *fo, int verbose) {
+    fasta_l fasta;
+    int count, gi;
+    count = 0;
+    off_t pos = 0;
+    while ((fasta = ReadFasta(fd, 1)) != NULL) {
+        fasta->getGi(fasta, &gi);
+        if (verbose) {
+            printf("Total: %10d\tGi: %10d \r", count, gi);
+            fflush(stdout);
+        }
+        fwrite(&gi, sizeof (int), 1, fo);
+        fwrite(&(pos), sizeof (off_t), 1, fo);
+        fasta->free(fasta);
+        pos = ftello(fd);
+        count++;
+    }
+    return count;
+}
+
+/**
+ * Create the fasta index file which include the gi and the offset position
+ * 
+ * @param fd the input fasta gzip file
+ * @param fo the output binary file
+ * @param verbose 1 to print info
+ * @return the number of elements read
+ */
+int CreateFastaIndexGzip(gzFile fd, FILE *fo, int verbose) {
+    fasta_l fasta;
+    int count, gi;
+    count = 0;
+    off_t pos = 0;
+    while ((fasta = ReadFastaGzip(fd, 1)) != NULL) {
+        fasta->getGi(fasta, &gi);
+        if (verbose) {
+            printf("Total: %10d\tGi: %10d \r", count, gi);
+            fflush(stdout);
+        }
+        fwrite(&gi, sizeof (int), 1, fo);
+        fwrite(&(pos), sizeof (off_t), 1, fo);
+        fasta->free(fasta);
+        pos = gztell(fd);
+        count++;
+    }
+    return count;
+}
+
+/**
+ * Create a Btree index from a fasta index file
+ * 
+ * @param fi the fasta index file
+ * @param verbose 1 to print info
+ * @return the Btree index
+ */
+node *CreateBtreeFromIndex(FILE *fi, int verbose) {
+    struct timespec start, stop;
+    node *root = NULL;
+    off_t fileLen;
+    off_t pos;
+    off_t *value;
+    int gi;
+    int count = 0;
+
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    fseeko(fi, 0, SEEK_END);
+    fileLen = ftello(fi);
+    fseeko(fi, 0, SEEK_SET);
+
+    pos = 0;
+    while (pos < fileLen) {
+        value = malloc(sizeof (off_t));
+        fread(&gi, sizeof (int), 1, fi);
+        fread(value, sizeof (off_t), 1, fi);
+
+        root = insert(root, gi, value);
+        pos = ftell(fi);
+        count++;
+    }
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    if (verbose)
+        printf("\n\tThere are %d GIs into the B+Tree. Elapsed time: %lu sec\n\n", count, timespecDiffSec(&stop, &start));
+    fflush(NULL);
+    return root;
 }
 

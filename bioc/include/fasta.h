@@ -33,6 +33,14 @@ extern "C" {
         void (*setHeader)(void *self, char *string);
 
         /**
+         * Get the Gi parsing the fasta header
+         * 
+         * @param self the container object
+         * @param gi the return gi
+         */
+        void (*getGi)(void *self, int *gi);
+
+        /**
          * Set the sequence
          * 
          * @param self the container object
@@ -122,9 +130,48 @@ extern "C" {
      * Read a fasta entry from the file
      * 
      * @param fp the input file
+     * @param excludeSeq 1 if you want to exclude the sequence 
      * @return the fasta entry
      */
-    extern fasta_l ReadFasta(FILE *fp);
+    extern fasta_l ReadFasta(FILE *fp, int excludeSeq);
+
+    /**
+     * Read a fasta entry from a gzipped file
+     * 
+     * @param fp the gzipped input file
+     * @param excludeSeq 1 if you want to exclude the sequence 
+     * @return the fasta entry
+     */
+    extern fasta_l ReadFastaGzip(gzFile fp, int excludeSeq);
+
+    /**
+     * Create the fasta index file which include the gi and the offset position
+     * 
+     * @param fd the input fasta file
+     * @param fo the output binary file
+     * @param verbose 1 to print info
+     * @return the number of elements read
+     */
+    extern int CreateFastaIndex(FILE *fd, FILE *fo, int verbose);
+
+    /**
+     * Create the fasta index file which include the gi and the offset position
+     * 
+     * @param fd the input fasta gzip file
+     * @param fo the output binary file
+     * @param verbose 1 to print info
+     * @return the number of elements read
+     */
+    extern int CreateFastaIndexGzip(gzFile fd, FILE *fo, int verbose);
+
+    /**
+     * Create a Btree index from a fasta index file
+     * 
+     * @param fi the fasta index file
+     * @param verbose 1 to print info
+     * @return the Btree index
+     */
+    extern node *CreateBtreeFromIndex(FILE *fi, int verbose);
 
 #ifdef	__cplusplus
 }
