@@ -1,5 +1,10 @@
 = Functions to manage the time =
 
+{{{
+#include <time.h>
+#include "btime.h"
+}}}
+
 ==Calculate the time difference in nanoseconds==
 
 {{{
@@ -14,11 +19,6 @@
 Usage:
 
 {{{
-#include <time.h>
-#include "btime.h"
-
-...
-
    struct timespec start, stop;
 
    ...
@@ -45,11 +45,6 @@ Usage:
 Usage:
 
 {{{
-#include <time.h>
-#include "btime.h"
-
-...
-
    struct timespec start, stop;
 
    ...
