@@ -180,10 +180,7 @@ int main(int argc, char** argv) {
             sprintf(fasta->header, "%s|%s", ids[gi], ids[fromTo]);
             fasta->toFile(fasta, fo, size);
 
-            for (i = 0; i < ids_number; i++) {
-                free(ids[i]);
-            }
-            free(ids);
+            freeString(ids, ids_number);
         }
         fasta->free(fasta);
     }
