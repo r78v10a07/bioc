@@ -237,3 +237,44 @@ The structure:
      */
     extern node *CreateBtreeFromIndex(FILE *fi, int verbose);
 }}}
+
+Usage:
+
+Create a binary index file for a big fasta file. Then, read randomly fasta entries from a GI list.
+
+Program to create the index (see source code [https://code.google.com/p/bioc/source/browse/trunk/BuildBtreeIndexFasta/ here]):
+{{{
+FILE *fd = checkPointerError(fopen("myfastabigfile.fna", "r"), "Can't open input file", __FILE__, __LINE__, -1);
+FILE *fo = checkPointerError(fopen("mybinaryindexfile.ind", "wb"), "Can't open output file", __FILE__, __LINE__, -1);
+
+CreateFastaIndexToFile(fd, fo, verbose);
+}}}
+
+Program to read the binary index file and play around:
+{{{
+fasta_l fasta;
+off_t offset;
+FILE *fd = checkPointerError(fopen("myfastabigfile.fna", "r"), "Can't open input file", __FILE__, __LINE__, -1);
+FILE *fIndex = checkPointerError(fopen("mybinaryindexfile.ind", "r"), "Can't open input file", __FILE__, __LINE__, -1);
+
+node *fBtree = CreateBtreeFromFasta(fFasta, verbose);
+
+// 12 is the GI, change it in your code to an real GI
+record *rec = find(fBtree, 12, flase);
+
+// Get the fasta entry offset in the big fasta file
+offset = *((off_t *) rec->value);
+// Put the file stream in the correct position in the big fasta file
+fseeko(fd, offset, SEEK_SET);
+fasta = ReadFasta(fFasta, 0);
+
+//Print the fasta entry
+fasta->toString(fasta);
+
+//Destroy the Btree
+destroy_tree(fBtree, fasta->free);
+
+//Free the fasta entry
+fasta->free(fasta);
+
+}}}
