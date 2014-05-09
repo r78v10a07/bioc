@@ -4,3 +4,5 @@
     * [btime Time]
     * [bstring String]
     * [btree Btree]
+    * [fasta Fasta]
+    * [taxonomy Taxonomy]
