@@ -30,7 +30,6 @@ void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "-h,   --help                        Display this usage information.\n");
     fprintf(stream, "-i,   --input                       The input fasta file\n");
     fprintf(stream, "-o,   --output                      The output binary file as index\n");
-    fprintf(stream, "-z,   --gzip                        Read the input file gzipped\n");
     fprintf(stream, "********************************************************************************\n");
     fprintf(stream, "\n            Roberto Vera Alvarez (e-mail: r78v10a07@gmail.com)\n\n");
     fprintf(stream, "********************************************************************************\n");
@@ -43,8 +42,8 @@ void print_usage(FILE *stream, int exit_code) {
 int main(int argc, char** argv) {
 
     struct timespec start, stop;
-    int next_option, verbose, count, gzip;
-    const char* const short_options = "vhi:o:z";
+    int next_option, verbose, gzip;
+    const char* const short_options = "vhi:o:";
     char *input, *output;
     FILE *fo;
     FILE *fd = NULL;
@@ -57,11 +56,10 @@ int main(int argc, char** argv) {
         { "help", 0, NULL, 'h'},
         { "input", 1, NULL, 'i'},
         { "output", 1, NULL, 'o'},
-        { "gzip", 0, NULL, 'z'},
         { NULL, 0, NULL, 0} /* Required at end of array.  */
     };
 
-    count = verbose = gzip = 0;
+    verbose = gzip = 0;
     input = output = NULL;
     do {
         next_option = getopt_long(argc, argv, short_options, long_options, NULL);
@@ -80,10 +78,7 @@ int main(int argc, char** argv) {
 
             case 'i':
                 input = strdup(optarg);
-                break;
-
-            case 'z':
-                gzip = 0;
+                gzip = 1 - strbcmp(input, ".gz");
                 break;
         }
     } while (next_option != -1);
@@ -97,25 +92,19 @@ int main(int argc, char** argv) {
     } else {
         gFile = checkPointerError(gzopen(input, "rb"), "Can't open the input file", __FILE__, __LINE__, -1);
     }
-
     fo = checkPointerError(fopen(output, "wb"), "Can't open output file", __FILE__, __LINE__, -1);
-
-    printf("Reading fasta from file\n");
-    fflush(stdout);
     if (!gzip) {
-        count = CreateFastaIndex(fd, fo, verbose);
+        CreateFastaIndexToFile(fd, fo, verbose);
     } else {
-        count = CreateFastaIndexGzip(gFile, fo, verbose);
+        CreateFastaIndexGzipToFile(gFile, fo, verbose);
     }
     fclose(fo);
 
-    printf("\nIndex with %d elements\n", count);
     if (!gzip) {
         fclose(fd);
     } else {
         gzclose(gFile);
     }
-    fclose(fo);
     if (input) free(input);
     if (output) free(output);
     clock_gettime(CLOCK_MONOTONIC, &stop);
