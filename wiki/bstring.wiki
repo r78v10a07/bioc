@@ -31,7 +31,7 @@ Usage:
         printf("%d %s\n",i,ids[i]);
     }
      
-    freeArrayofPointers((void **), ids_number);
+    freeArrayofPointers((void **) ids, ids_number);
 
 /*
  This will print out:
@@ -39,5 +39,30 @@ Usage:
 0 string1 to cut
 1 string2 to cut
 2 string 3 to cut
+*/
+}}}
+
+==Compare if the string ends with the sufix==
+
+{{{
+    /**
+     * @param haystack the string to be analyzed
+     * @param needle the suffix string
+     * @return 0 if the string haystack ends with the string needle, 1 if not
+     */
+    int strbcmp(const char *haystack, const char *needle);
+
+}}}
+
+Usage:
+
+{{{
+   char *fileName = "myfile.gz";
+   char *ext = ".gz";
+
+   int result = strbcmp(fileName, ext);
+
+/*
+The result variable will be 0 because fileName ends with the .gz 
 */
 }}}
