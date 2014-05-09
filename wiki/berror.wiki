@@ -1,5 +1,4 @@
-
-= Introduction =
+=Functions to manage the errors=
 
 ==Print a message in the file and exit if the exit_status is different of zero==
 {{{
