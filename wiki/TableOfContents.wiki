@@ -1,4 +1,5 @@
   * [bioc BioC]
-    * [berror Error management]
-    * [bmemory Memory management]
-    * [btime Time management]
+    * [berror Error]
+    * [bmemory Memory]
+    * [btime Time]
+    * [bstring String]
