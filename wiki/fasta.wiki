@@ -272,8 +272,10 @@ fasta = ReadFasta(fFasta, 0);
 //Print the fasta entry
 fasta->toString(fasta);
 
-//Destroy the Btree
-destroy_tree(fBtree, fasta->free);
+/* Destroy the Btree using the system free function (#include <stdlib.h>)
+ * because the btree are offsets
+ */
+destroy_tree(fBtree, free);
 
 //Free the fasta entry
 fasta->free(fasta);
