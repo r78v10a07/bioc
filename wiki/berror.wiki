@@ -1,7 +1,7 @@
 =Functions to manage the errors=
 
 {{{
-  berror.h
+#include "berror.h"
 }}}
 
 ==Print a message in the file and exit if the exit_status is different of zero==
