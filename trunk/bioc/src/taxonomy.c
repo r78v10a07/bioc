@@ -37,7 +37,7 @@ void freeTaxonomy(void *self) {
  * @param self the container object
  * @param out the output file
  */
-void toFile(void * self, FILE *out) {
+void toFileTaxonomy(void * self, FILE *out) {
     _CHECK_SELF_P(self);
     fprintf(out, "%d %d %s %s\n",
             ((taxonomy_l) self)->taxId,
@@ -51,9 +51,9 @@ void toFile(void * self, FILE *out) {
  * 
  * @param self the container object
  */
-void toString(void * self) {
+void toStringTaxonomy(void * self) {
     _CHECK_SELF_P(self);
-    toFile(self, stdout);
+    ((taxonomy_l) self)->toFile(self, stdout);
 }
 
 /**
@@ -136,8 +136,8 @@ taxonomy_l CreateTaxonomy() {
     tax->rank = NULL;
 
     tax->free = &freeTaxonomy;
-    tax->toFile = &toFile;
-    tax->toString = &toString;
+    tax->toFile = &toFileTaxonomy;
+    tax->toString = &toStringTaxonomy;
     tax->setTaxId = &setTaxId;
     tax->setParentTaxId = &setParentTaxId;
     tax->setName = &setName;
@@ -155,7 +155,6 @@ taxonomy_l CreateTaxonomy() {
  */
 taxonomy_l ReadTaxonomy(FILE *nodes, FILE *names) {
     taxonomy_l self = NULL;
-
     int i;
     char *line = NULL;
     size_t len = 0;
@@ -167,6 +166,11 @@ taxonomy_l ReadTaxonomy(FILE *nodes, FILE *names) {
     if (getline(&line, &len, nodes) != -1) {
         self = CreateTaxonomy();
         ids_number = splitString(&ids, line, "\t|");
+        if (ids_number < 3){
+            fprintf(stderr,"LINE: %s",line);
+            fprintf(stderr,"ids number: %d\n",ids_number);
+            checkPointerError(NULL, "Can't parse the nodes.dmp file", __FILE__, __LINE__, -1);
+        }
         self->setTaxId(self, atoi(ids[0]));
         self->setParentTaxId(self, atoi(ids[1]));
         self->setRank(self, ids[2]);
@@ -180,7 +184,7 @@ taxonomy_l ReadTaxonomy(FILE *nodes, FILE *names) {
                     self->setName(self, ids[1]);
                     freeString(ids, ids_number);
                 }
-            }
+            }            
             if (i > self->taxId) {
                 fseeko(names, pos, SEEK_SET);
                 break;
@@ -188,7 +192,6 @@ taxonomy_l ReadTaxonomy(FILE *nodes, FILE *names) {
             pos = ftello(names);
         }
     }
-
     if (line) free(line);
     return self;
 }
@@ -197,15 +200,40 @@ taxonomy_l ReadTaxonomy(FILE *nodes, FILE *names) {
  * Read the NCBI Taxonomy nodes.dmp and names.dmp files an return a Btree index with 
  * the data
  * 
- * @param nodes the nodes.dmp NCBI Taxonomy file
- * @param names the names.dmp NCBI Taxonomy file
+ * @param dir the NCBI Taxonomy DB directory
+ * @param verbose 1 to print a verbose info
  * @return the NCBI Taxonomy db in a Btree index
  */
-node *TaxonomyDBIndex(FILE *nodes, FILE *names) {
+node *TaxonomyDBIndex(char *dir, int verbose) {
+    struct timespec stop, mid;
+    char *tmp;
+    FILE *nodes, *names;
     node *root = NULL;
     taxonomy_l tax;
+
+    clock_gettime(CLOCK_MONOTONIC, &mid);
+    if (verbose) {
+        printf("Reading the Taxonomy database ... ");
+        fflush(stdout);
+    }
+
+    tmp = allocate(sizeof (char) * (strlen(dir) + 11), __FILE__, __LINE__);
+    sprintf(tmp, "%s/nodes.dmp", dir);
+    nodes = checkPointerError(fopen(tmp, "r"), "Can't open the nodes file", __FILE__, __LINE__, -1);
+    sprintf(tmp, "%s/names.dmp", dir);
+    names = checkPointerError(fopen(tmp, "r"), "Can't open the names file", __FILE__, __LINE__, -1);
+
     while ((tax = ReadTaxonomy(nodes, names)) != NULL) {
         root = insert(root, tax->taxId, tax);
+    }   
+
+    fclose(nodes);
+    fclose(names);
+    free(tmp);
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    if (verbose) {
+        printf("%lu sec\n", timespecDiffSec(&stop, &mid));
+        fflush(stdout);
     }
     return root;
 }

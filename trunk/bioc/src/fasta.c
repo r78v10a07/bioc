@@ -44,7 +44,7 @@ typedef struct thread_param {
  * @param out the output file
  * @param lineLength the length of the fasta line
  */
-void toFile(void * self, FILE *out, int lineLength) {
+void toFileFasta(void * self, FILE *out, int lineLength) {
     _CHECK_SELF_P(self);
     int i = 0;
     char *tmp = allocate(sizeof (char) * (lineLength + 1), __FILE__, __LINE__);
@@ -67,9 +67,9 @@ void toFile(void * self, FILE *out, int lineLength) {
  * @param self the container object
  * @param lineLength the length of the fasta line
  */
-void toString(void * self, int lineLength) {
+void toStringFasta(void * self, int lineLength) {
     _CHECK_SELF_P(self);
-    toFile(self, stdout, lineLength);
+    ((fasta_l) self)->toFile(self, stdout, lineLength);
 }
 
 /**
@@ -145,6 +145,7 @@ void freeFasta(void *self) {
 /**
  * Extract and print a segments from the start position with length
  * 
+ * @param outvoid the fasta_l object to return
  * @param self the container object
  * @param out the output file 
  * @param header the fasta header
@@ -152,39 +153,13 @@ void freeFasta(void *self) {
  * @param length the segment length
  * @param lineLength the length of the fasta line
  */
-void printSegment(void * self, FILE *out, char *header, int start, int length, int lineLength) {
-    _CHECK_SELF_P(self);
-    int i = start;
-    int j = 0;
-    fprintf(out, ">%s\n", header);
-    while (i < ((fasta_l) self)->len && (i - start) < length) {
-        if (j == lineLength) {
-            fprintf(out, "\n");
-            j = 0;
-        }
-        fprintf(out, "%c", *(((fasta_l) self)->seq + i));
-        j++;
-        i++;
-    }
-    fprintf(out, "\n");
-}
-
-/**
- * Extract and print a segments from the start position with length
- * 
- * @param self the container object
- * @param out the output file 
- * @param header the fasta header
- * @param start the start position 
- * @param length the segment length
- * @param lineLength the length of the fasta line
- */
-fasta_l getSegment(void * self, char *header, int start, int length) {
+void getSegment(void **outvoid, void * self, char *header, int start, int length) {
     _CHECK_SELF_P(self);
     fasta_l out = CreateFasta();
     int size;
     char *tmp;
 
+    outvoid = NULL;
     if (start < ((fasta_l) self)->len) {
         if (start + length < ((fasta_l) self)->len) {
             size = length;
@@ -197,9 +172,41 @@ fasta_l getSegment(void * self, char *header, int start, int length) {
         strncpy(tmp, (((fasta_l) self)->seq + start), size);
         out->setSeq(out, tmp);
         free(tmp);
-        return out;
+        *outvoid = out;
     }
-    return NULL;
+}
+
+/**
+ * Extract and print a segments from the start position with length
+ * 
+ * @param self the container object
+ * @param out the output file 
+ * @param header the fasta header
+ * @param start the start position 
+ * @param length the segment length
+ * @param lineLength the length of the fasta line
+ */
+void printSegment(void * self, FILE *out, char *header, int start, int length, int lineLength) {
+    _CHECK_SELF_P(self);
+    fasta_l outf;
+    int size;
+    char *tmp;
+    if (start < ((fasta_l) self)->len) {
+        if (start + length < ((fasta_l) self)->len) {
+            size = length;
+        } else {
+            size = ((fasta_l) self)->len - start;
+        }
+        outf = CreateFasta();
+        outf->setHeader(outf, header);
+        tmp = allocate(sizeof (char) * (length + 1), __FILE__, __LINE__);
+        memset(tmp, 0, sizeof (char) * (length + 1));
+        strncpy(tmp, (((fasta_l) self)->seq + start), size);
+        outf->setSeq(outf, tmp);
+        free(tmp);
+        outf->toFile(outf, out, lineLength);
+        outf->free(outf);
+    }
 }
 
 /**
@@ -301,7 +308,7 @@ void *thread_functionInMem(void *arg) {
     char *header = allocate(sizeof (char) * size, __FILE__, __LINE__);
     void **res = NULL;
     int resNumber = 0;
-    fasta_l fasta;
+    fasta_l fasta = NULL;
 
     memset(header, 0, size);
     strcpy(header, ((fasta_l) self)->header);
@@ -322,12 +329,8 @@ void *thread_functionInMem(void *arg) {
     index = strlen(header);
     for (i = parms->start; i < parms->end; i += parms->offset) {
         header[index] = '\0';
-        //if (ids_number % 2 == 0) {
         sprintf(header, "%s%d-%d", header, i, i + parms->length);
-        // } else {
-        //    sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
-        // }
-        fasta = getSegment(self, header, i, parms->length);
+        getSegment((void **) &fasta, self, header, i, parms->length);
         res = realloc(res, sizeof (void **) * (resNumber + 1));
         checkPointerError(res, "Can't allocate memory", __FILE__, __LINE__, -1);
         res[resNumber] = fasta;
@@ -451,7 +454,7 @@ fasta_l CreateFasta() {
     self->header = NULL;
     self->seq = NULL;
     self->len = 0;
-    self->toString = &toString;
+    self->toString = &toStringFasta;
     self->length = &length;
     self->free = &freeFasta;
     self->setHeader = &setHeader;
@@ -459,7 +462,8 @@ fasta_l CreateFasta() {
     self->printOverlapSegments = &printOverlapSegments;
     self->printSegment = &printSegment;
     self->printOverlapSegmentsPthread = &printOverlapSegmentsPthread;
-    self->toFile = &toFile;
+    self->toFile = &toFileFasta;
+    self->getSegment = &getSegment;
     self->getGi = &getGi;
 
     return self;
@@ -489,7 +493,7 @@ fasta_l ReadFasta(FILE *fp, int excludeSeq) {
                 fseeko(fp, pos, SEEK_SET);
                 break;
             }
-        } else if (!excludeSeq) {
+        } else if (excludeSeq != 1) {
             checkPointerError(self, "The fasta file does not start with the header (>)", __FILE__, __LINE__, -1);
             if (self->seq == NULL) {
                 self->seq = strndup(line, strlen(line) - 1);
@@ -532,7 +536,7 @@ fasta_l ReadFastaGzip(gzFile fp, int excludeSeq) {
                 gzseek(fp, pos, SEEK_SET);
                 break;
             }
-        } else if (!excludeSeq) {
+        } else if (excludeSeq != 1) {
             checkPointerError(self, "The fasta file does not start with the header (>)", __FILE__, __LINE__, -1);
             if (self->seq == NULL) {
                 self->seq = strndup(line, strlen(line) - 1);
@@ -560,15 +564,20 @@ fasta_l ReadFastaGzip(gzFile fp, int excludeSeq) {
  * @param verbose 1 to print info
  * @return the number of elements read
  */
-int CreateFastaIndex(FILE *fd, FILE *fo, int verbose) {
+int CreateFastaIndexToFile(FILE *fd, FILE *fo, int verbose) {
     fasta_l fasta;
     int count, gi;
     count = 0;
     off_t pos = 0;
+
+    if (verbose) {
+        printf("Creating the fasta index\n");
+        fflush(stdout);
+    }
     while ((fasta = ReadFasta(fd, 1)) != NULL) {
         fasta->getGi(fasta, &gi);
         if (verbose) {
-            printf("Total: %10d\tGi: %10d \r", count, gi);
+            printf("Total: %10d \r", count);
             fflush(stdout);
         }
         fwrite(&gi, sizeof (int), 1, fo);
@@ -577,7 +586,50 @@ int CreateFastaIndex(FILE *fd, FILE *fo, int verbose) {
         pos = ftello(fd);
         count++;
     }
+    if (verbose) {
+        printf("Total: %10d \n", count);
+        fflush(stdout);
+    }
     return count;
+}
+
+/**
+ * Create the fasta index file which include the gi and the offset position
+ * 
+ * @param fd the input fasta file
+ * @param verbose 1 to print info
+ * @return the Btree index
+ */
+node * CreateBtreeFromFasta(FILE *fd, int verbose) {
+    fasta_l fasta;
+    node *root = NULL;
+    off_t *value;
+    int count, gi;
+    count = 0;
+    off_t pos = 0;
+
+    if (verbose) {
+        printf("Creating the fasta index\n");
+        fflush(stdout);
+    }
+    while ((fasta = ReadFasta(fd, 1)) != NULL) {
+        value = malloc(sizeof (off_t));
+        fasta->getGi(fasta, &gi);
+        if (verbose) {
+            printf("Total: %10d \r", count);
+            fflush(stdout);
+        }
+        *value = pos;
+        root = insert(root, gi, value);
+        fasta->free(fasta);
+        pos = ftello(fd);
+        count++;
+    }
+    if (verbose) {
+        printf("Total: %10d \n", count);
+        fflush(stdout);
+    }
+    return root;
 }
 
 /**
@@ -588,7 +640,7 @@ int CreateFastaIndex(FILE *fd, FILE *fo, int verbose) {
  * @param verbose 1 to print info
  * @return the number of elements read
  */
-int CreateFastaIndexGzip(gzFile fd, FILE *fo, int verbose) {
+int CreateFastaIndexGzipToFile(gzFile fd, FILE *fo, int verbose) {
     fasta_l fasta;
     int count, gi;
     count = 0;
@@ -606,6 +658,45 @@ int CreateFastaIndexGzip(gzFile fd, FILE *fo, int verbose) {
         count++;
     }
     return count;
+}
+
+/**
+ * Create the fasta index file which include the gi and the offset position
+ * 
+ * @param fd the input fasta file
+ * @param verbose 1 to print info
+ * @return the Btree index
+ */
+node * CreateBtreeFromFastaGzip(gzFile fd, int verbose) {
+    fasta_l fasta;
+    node *root = NULL;
+    off_t *value;
+    int count, gi;
+    count = 0;
+    off_t pos = 0;
+
+    if (verbose) {
+        printf("Creating the fasta index\n");
+        fflush(stdout);
+    }
+    while ((fasta = ReadFastaGzip(fd, 1)) != NULL) {
+        value = malloc(sizeof (off_t));
+        fasta->getGi(fasta, &gi);
+        if (verbose) {
+            printf("Total: %10d \r", count);
+            fflush(stdout);
+        }
+        *value = pos;
+        root = insert(root, gi, value);
+        fasta->free(fasta);
+        pos = gztell(fd);
+        count++;
+    }
+    if (verbose) {
+        printf("Total: %10d \n", count);
+        fflush(stdout);
+    }
+    return root;
 }
 
 /**

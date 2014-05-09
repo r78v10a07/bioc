@@ -73,7 +73,7 @@
           <incDir>
             <pElem>include</pElem>
           </incDir>
-          <commandLine>-O2 -Wall</commandLine>
+          <commandLine>-O2 -Wall -g</commandLine>
         </cTool>
         <archiverTool>
         </archiverTool>

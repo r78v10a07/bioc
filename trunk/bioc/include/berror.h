@@ -11,6 +11,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+    
+#define PRINTFILELINE printFileLine(__FILE__, __LINE__)
 
     /**
      * Print a message in the file and exit if the exit_status is different of zero
@@ -35,6 +37,14 @@ extern "C" {
      * @return the same pointer if everything is fine
      */
     extern void *checkPointerError(void *data, char *msg, char *file, int line, int exit_status);
+
+    /**
+     * Print the FILE and LINE info
+     * 
+     * @param file the file name (__FILE__)
+     * @param line the line name (__LINE__)
+     */
+    extern void printFileLine(char *file, int line);
 
 #ifdef	__cplusplus
 }
