@@ -1,0 +1,149 @@
+= Introduction =
+
+This code was taken and modified from [http://www.amittai.com/prose/bplustree.html here]. Original code wrote by [http://www.amittai.com Amittai Aviram].
+
+[https://bioc.googlecode.com/svn/trunk/bioc/include/btree.h btree.h]  [https://bioc.googlecode.com/svn/trunk/bioc/src/btree.c btree.c] 
+
+{{{
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "btree.h"
+}}}
+
+Two important structures:
+
+The record and the node structure:
+
+{{{
+    typedef struct record {
+        void *value;
+    } record;
+
+    typedef struct node {
+        void ** pointers;
+        int * keys;
+        struct node * parent;
+        bool is_leaf;
+        int num_keys;
+        struct node * next; // Used for queue.
+    } node;
+}}}
+
+==Master insertion function==
+
+{{{
+    /**
+     * Master insertion function.
+     * Inserts a key and an associated value into
+     * the B+ tree, causing the tree to be adjusted
+     * however necessary to maintain the B+ tree
+     * properties.
+     * 
+     * @param root the root nodes
+     * @param key the key to be used to identify the object
+     * @param value the pointer to the object
+     * @return the new root node
+     */
+    extern node *insert(node * root, int key, void *value);
+}}}
+
+Usage:
+
+{{{
+   FILE *fd;
+   node *root = NULL;
+   fasta_l fasta;
+  
+   // Read the fasta from the file fd and create an index with them 
+   while ((fasta = ReadFasta(fd, 0)) != NULL) {        
+        /* Insert the position in the file where the fasta 
+         * object start using the gi as key
+         */
+        root = insert(root, gi, fasta);
+    }
+}}}
+
+==Destroy the Btree==
+
+{{{
+    /**
+     * Destroy the tree using the record specific function
+     * 
+     * @param root the root node
+     * @param freeRecord the record specific function
+     * @return NULL;
+     */
+    extern node *destroy_tree(node * root, void freeRecord(void *));
+}}}
+
+Usage:
+
+{{{
+   // Here the fasta->free is a void * to the fasta_l free function
+   destroy_tree(root, fasta->free);
+}}}
+
+==Finds and returns the record to which a key refers==
+
+{{{
+    /**
+     * @param root the root node
+     * @param key the key of the object to find
+     * @param verbose true to print info
+     * @return 
+     */
+    extern record *find(node * root, int key, bool verbose);
+}}}
+
+Usage:
+
+{{{ 
+   record *rec = find(root,10, false);
+ 
+   fasta_l fasta = (fasta_l) rec->value;
+}}}
+
+==Print the BTree==
+
+{{{
+    /**
+     * Prints the B+ tree in the command
+     * line in level (rank) order, with the 
+     * keys in each node and the '|' symbol
+     * to separate nodes.
+     * With the verbose_output flag set.
+     * the values of the pointers corresponding
+     * to the keys also appear next to their respective
+     * keys, in hexadecimal notation.
+     * 
+     * @param root the root nodes
+     */
+    extern void print_tree(node * root);
+}}}
+
+Usage:
+
+{{{
+   print_tree(root);
+}}}
+
+==Utility function to give the height of the tree==
+
+{{{
+    /**
+     * Utility function to give the height
+     * of the tree, which length in number of edges
+     * of the path from the root to any leaf.
+     * 
+     * @param root the root node
+     * @return the height of the tree
+     */
+    extern int height(node * root);
+}}}
+
+Usage:
+
+{{{
+   int h = height(root);
+}}}
