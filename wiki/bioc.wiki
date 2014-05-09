@@ -1,5 +1,3 @@
-#summary BioC Introduction
-= Introduction =
 
 The BioC library includes basic functions written in C for Bioinformatics tools.
 
