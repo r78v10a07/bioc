@@ -1,6 +1,8 @@
 =Functions to manage the errors=
 
 {{{
+#include <stdio.h>
+#include <stdlib.h>
 #include "berror.h"
 }}}
 
