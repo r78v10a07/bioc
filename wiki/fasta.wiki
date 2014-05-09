@@ -257,9 +257,10 @@ off_t offset;
 FILE *fd = checkPointerError(fopen("myfastabigfile.fna", "r"), "Can't open input file", __FILE__, __LINE__, -1);
 FILE *fIndex = checkPointerError(fopen("mybinaryindexfile.ind", "r"), "Can't open input file", __FILE__, __LINE__, -1);
 
+// Create the Btree from the fasta binary index file
 node *fBtree = CreateBtreeFromFasta(fFasta, verbose);
 
-// 12 is the GI, change it in your code to an real GI
+// 12 is the GI, change it in your code to a real GI
 record *rec = find(fBtree, 12, flase);
 
 // Get the fasta entry offset in the big fasta file
