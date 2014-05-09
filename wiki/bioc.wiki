@@ -6,8 +6,8 @@ The BioC library includes basic functions written in C for Bioinformatics tools.
 The library includes 7 modules:
 
   * [berror Error management]
-  * [bmemory bmemory]
-  * [btime btime]
+  * [bmemory Memory management]
+  * [btime Time management]
   * [bstring bstring]
   * [btree btree]
   * [fasta fasta]
