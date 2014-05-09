@@ -61,11 +61,11 @@ int getPrintIndex(char *rank, int useNoRank) {
  */
 int main(int argc, char** argv) {
     taxonomy_l tax;
-    struct timespec start, stop, mid;
+    struct timespec start, stop;
     int i, next_option, verbose, taxId;
     const char* const short_options = "vhd:o:t:";
-    char *dir, *output, *tmp, *taxIdsName;
-    FILE *nodes, *names, *taxids;
+    char *dir, *output, *taxIdsName;
+    FILE *taxids;
     FILE *fd;
     node *taxDB = NULL;
     node *foundTax = NULL;
@@ -120,22 +120,11 @@ int main(int argc, char** argv) {
         print_usage(stderr, -1);
     }
 
-    tmp = allocate(sizeof (char) * (strlen(dir) + 11), __FILE__, __LINE__);
-    sprintf(tmp, "%s/nodes.dmp", dir);
-    nodes = checkPointerError(fopen(tmp, "r"), "Can't open the nodes file", __FILE__, __LINE__, -1);
-    sprintf(tmp, "%s/names.dmp", dir);
-    names = checkPointerError(fopen(tmp, "r"), "Can't open the names file", __FILE__, __LINE__, -1);
     fd = checkPointerError(fopen(output, "w"), "Can't open output file", __FILE__, __LINE__, -1);
 
     taxids = checkPointerError(fopen(taxIdsName, "r"), "Can't open the Gi file", __FILE__, __LINE__, -1);
 
-    clock_gettime(CLOCK_MONOTONIC, &mid);
-    if (verbose) printf("Reading the Taxonomy database ... ");
-    fflush(stdout);
-    taxDB = TaxonomyDBIndex(nodes, names);
-    clock_gettime(CLOCK_MONOTONIC, &stop);
-    if (verbose) printf("%lu sec\n", timespecDiffSec(&stop, &mid));
-    fflush(stdout);
+    taxDB = TaxonomyDBIndex(dir, verbose);
 
     printf("The Btree has a height of %d\n", height(taxDB));
 
@@ -196,9 +185,6 @@ int main(int argc, char** argv) {
     if (line) free(line);
     if (taxIdsName) free(taxIdsName);
     if (taxids) fclose(taxids);
-    if (tmp) free(tmp);
-    if (nodes) fclose(nodes);
-    if (names) fclose(names);
     if (dir) free(dir);
     if (output) free(output);
     clock_gettime(CLOCK_MONOTONIC, &stop);
