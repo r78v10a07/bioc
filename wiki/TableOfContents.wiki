@@ -1,2 +1,3 @@
   * [bioc BioC]
     * [berror Error management]
+    * [bmemory Memory management]
