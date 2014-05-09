@@ -1,2 +1,2 @@
   * [bioc BioC]
-    * [berror berror]
+    * [berror Functions to manage the errors]
