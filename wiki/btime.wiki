@@ -1,6 +1,6 @@
 = Functions to manage the time =
 
-==Calculate the difference in time in nanoseconds==
+==Calculate the time difference in nanoseconds==
 
 {{{
     /**
@@ -31,7 +31,7 @@ Usage:
    printf("The total time was %lu nanosec\n", timespecDiff(&stop, &start));
 }}}
 
-==Calculate the difference in time in seconds==
+==Calculate the time difference in seconds==
 
 {{{
     /**
