@@ -1,5 +1,7 @@
 =Functions to manage the memory allocation=
 
+[https://bioc.googlecode.com/svn/trunk/bioc/include/bmemory.h bmemory.h]  [https://bioc.googlecode.com/svn/trunk/bioc/src/bmemory.c bmemory.c] 
+
 {{{
 #include <stdio.h>
 #include <stdlib.h>
