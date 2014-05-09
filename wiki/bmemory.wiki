@@ -48,3 +48,16 @@ Usage:
    */ 
   a = allocate(a, sizeof(char) * 20, __FILE__, __LINE__);
 }}}
+
+==Free an array of pointers==
+
+{{{
+    /**
+     * @param str the pointer to be free
+     * @param index the number of strings
+     */
+    extern void freeArrayofPointers(void **pointer, int index);
+
+}}}
+
+Usage: see [bstring String management]
