@@ -1,6 +1,8 @@
 =Functions to manage the memory allocation=
 
 {{{
+#include <stdio.h>
+#include <stdlib.h>
 #include "bmemory.h"
 }}}
 
