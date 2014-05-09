@@ -1,0 +1,63 @@
+= Functions to manage the time =
+
+==Calculate the difference in time in nanoseconds==
+
+{{{
+    /**
+     * @param stop last time 
+     * @param start first time
+     * @return the time in nanoseconds
+     */
+    extern int64_t timespecDiff(struct timespec *stop, struct timespec *start);
+}}}
+
+Usage:
+
+{{{
+#include <time.h>
+#include "btime.h"
+
+...
+
+   struct timespec start, stop;
+
+   ...
+
+   clock_gettime(CLOCK_MONOTONIC, &start);
+
+   ...
+
+   clock_gettime(CLOCK_MONOTONIC, &stop);
+   printf("The total time was %lu nanosec\n", timespecDiff(&stop, &start));
+}}}
+
+==Calculate the difference in time in seconds==
+
+{{{
+    /**
+     * @param stop last time 
+     * @param start first time
+     * @return the time in seconds
+     */
+    extern int64_t timespecDiffSec(struct timespec *stop, struct timespec *start);
+}}}
+
+Usage:
+
+{{{
+#include <time.h>
+#include "btime.h"
+
+...
+
+   struct timespec start, stop;
+
+   ...
+
+   clock_gettime(CLOCK_MONOTONIC, &start);
+
+   ...
+
+   clock_gettime(CLOCK_MONOTONIC, &stop);
+   printf("The total time was %lu sec\n", timespecDiffSec(&stop, &start));
+}}}
