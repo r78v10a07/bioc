@@ -1,5 +1,7 @@
 =Functions to manage the strings=
 
+[https://bioc.googlecode.com/svn/trunk/bioc/include/bstring.h bstring.h]  [https://bioc.googlecode.com/svn/trunk/bioc/src/bstring.c bstring.c] 
+
 {{{
 #include <stdio.h>
 #include <string.h>
