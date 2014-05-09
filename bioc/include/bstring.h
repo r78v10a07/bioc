@@ -28,7 +28,16 @@ extern "C" {
      * @param str the pointer to be free
      * @param index the number of strings
      */
-    void freeString(char **str, int index);
+    extern void freeString(char **str, int index);
+
+    /**
+     * Return 0 if the string haystack ends with the string needle
+     * 
+     * @param haystack the string to be analyzed
+     * @param needle the suffix string
+     * @return 0 if the string haystack ends with the string needle, 1 if not
+     */
+    int strbcmp(const char *haystack, const char *needle);
 
 
 #ifdef	__cplusplus

@@ -49,6 +49,19 @@ extern "C" {
         void (*setSeq)(void *self, char *string);
 
         /**
+         * Extract and print a segments from the start position with length
+         * 
+         * @param outvoid the fasta_l object to return
+         * @param self the container object
+         * @param out the output file 
+         * @param header the fasta header
+         * @param start the start position 
+         * @param length the segment length
+         * @param lineLength the length of the fasta line
+         */
+        void (*getSegment)(void **outvoid, void * self, char *header, int start, int length);
+
+        /**
          * Creates segments of length with an overlap of offset
          * 
          * @param self the container object
@@ -152,7 +165,16 @@ extern "C" {
      * @param verbose 1 to print info
      * @return the number of elements read
      */
-    extern int CreateFastaIndex(FILE *fd, FILE *fo, int verbose);
+    extern int CreateFastaIndexToFile(FILE *fd, FILE *fo, int verbose);
+
+    /**
+     * Create the fasta index file which include the gi and the offset position
+     * 
+     * @param fd the input fasta file
+     * @param verbose 1 to print info
+     * @return the Btree index
+     */
+    extern node * CreateBtreeFromFasta(FILE *fd, int verbose);
 
     /**
      * Create the fasta index file which include the gi and the offset position
@@ -162,7 +184,16 @@ extern "C" {
      * @param verbose 1 to print info
      * @return the number of elements read
      */
-    extern int CreateFastaIndexGzip(gzFile fd, FILE *fo, int verbose);
+    extern int CreateFastaIndexGzipToFile(gzFile fd, FILE *fo, int verbose);
+
+    /**
+     * Create the fasta index file which include the gi and the offset position
+     * 
+     * @param fd the input fasta file
+     * @param verbose 1 to print info
+     * @return the Btree index
+     */
+    extern node * CreateBtreeFromFastaGzip(gzFile fd, int verbose);
 
     /**
      * Create a Btree index from a fasta index file

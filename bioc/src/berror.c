@@ -47,3 +47,14 @@ void *checkPointerError(void *data, char *msg, char *file, int line, int exit_st
     return data;
 }
 
+/**
+ * Print the FILE and LINE info
+ * 
+ * @param file the file name (__FILE__)
+ * @param line the line name (__LINE__)
+ */
+void printFileLine(char *file, int line) {
+    printf("%s %d\n", file, line);
+    fflush(stdout);
+}
+

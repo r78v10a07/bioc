@@ -110,11 +110,11 @@ extern "C" {
      * Read the NCBI Taxonomy nodes.dmp and names.dmp files an return a Btree index with 
      * the data
      * 
-     * @param nodes the nodes.dmp NCBI Taxonomy file
-     * @param names the names.dmp NCBI Taxonomy file
+     * @param dir the NCBI Taxonomy DB directory
+     * @param verbose 1 to print a verbose info
      * @return the NCBI Taxonomy db in a Btree index
      */
-    extern node *TaxonomyDBIndex(FILE *nodes, FILE *names);
+    extern node *TaxonomyDBIndex(char *dir, int verbose);
 
     /**
      * Read the gi_taxid_nucl.dmp.gz file from NCBI Taxonomy and return a Btree 
