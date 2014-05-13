@@ -194,7 +194,7 @@ extern "C" {
      * @param verbose 1 to print info
      * @return the Btree index
      */
-    extern node * CreateBtreeFromFasta(FILE *fd, int verbose);
+    extern BtreeNode_t * CreateBtreeFromFasta(FILE *fd, int verbose);
 
     /**
      * Create a fasta binary index file which include the gi and the offset position
@@ -213,7 +213,7 @@ extern "C" {
      * @param verbose 1 to print info
      * @return the Btree index
      */
-    extern node * CreateBtreeFromFastaGzip(gzFile fd, int verbose);
+    extern BtreeNode_t * CreateBtreeFromFastaGzip(gzFile fd, int verbose);
 
     /**
      * Create a Btree index from a fasta index file
@@ -222,7 +222,7 @@ extern "C" {
      * @param verbose 1 to print info
      * @return the Btree index
      */
-    extern node *CreateBtreeFromIndex(FILE *fi, int verbose);
+    extern BtreeNode_t *CreateBtreeFromIndex(FILE *fi, int verbose);
 
 #ifdef	__cplusplus
 }

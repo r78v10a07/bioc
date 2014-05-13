@@ -654,9 +654,9 @@ int CreateFastaIndexToFile(FILE *fd, FILE *fo, int verbose) {
  * @param verbose 1 to print info
  * @return the Btree index
  */
-node * CreateBtreeFromFasta(FILE *fd, int verbose) {
+BtreeNode_t * CreateBtreeFromFasta(FILE *fd, int verbose) {
     fasta_l fasta;
-    node *root = NULL;
+    BtreeNode_t *root = NULL;
     off_t *value;
     int count, gi;
     count = 0;
@@ -674,7 +674,7 @@ node * CreateBtreeFromFasta(FILE *fd, int verbose) {
             fflush(stdout);
         }
         *value = pos;
-        root = insert(root, gi, value);
+        root = BtreeInsert(root, gi, value);
         fasta->free(fasta);
         pos = ftello(fd);
         count++;
@@ -721,9 +721,9 @@ int CreateFastaIndexGzipToFile(gzFile fd, FILE *fo, int verbose) {
  * @param verbose 1 to print info
  * @return the Btree index
  */
-node * CreateBtreeFromFastaGzip(gzFile fd, int verbose) {
+BtreeNode_t * CreateBtreeFromFastaGzip(gzFile fd, int verbose) {
     fasta_l fasta;
-    node *root = NULL;
+    BtreeNode_t *root = NULL;
     off_t *value;
     int count, gi;
     count = 0;
@@ -741,7 +741,7 @@ node * CreateBtreeFromFastaGzip(gzFile fd, int verbose) {
             fflush(stdout);
         }
         *value = pos;
-        root = insert(root, gi, value);
+        root = BtreeInsert(root, gi, value);
         fasta->free(fasta);
         pos = gztell(fd);
         count++;
@@ -760,9 +760,9 @@ node * CreateBtreeFromFastaGzip(gzFile fd, int verbose) {
  * @param verbose 1 to print info
  * @return the Btree index
  */
-node *CreateBtreeFromIndex(FILE *fi, int verbose) {
+BtreeNode_t *CreateBtreeFromIndex(FILE *fi, int verbose) {
     struct timespec start, stop;
-    node *root = NULL;
+    BtreeNode_t *root = NULL;
     off_t fileLen;
     off_t pos;
     off_t *value;
@@ -780,7 +780,7 @@ node *CreateBtreeFromIndex(FILE *fi, int verbose) {
         fread(&gi, sizeof (int), 1, fi);
         fread(value, sizeof (off_t), 1, fi);
 
-        root = insert(root, gi, value);
+        root = BtreeInsert(root, gi, value);
         pos = ftell(fi);
         count++;
     }

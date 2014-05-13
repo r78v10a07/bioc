@@ -28,9 +28,9 @@ extern "C" {
      *  Last modified: 15 April 2014
      */
 
-    typedef struct record {
+    typedef struct BtreeRecord_t {
         void *value;
-    } record;
+    } BtreeRecord_t;
 
     /* Type representing a node in the B+ tree.
      * This type is general enough to serve for both
@@ -60,14 +60,14 @@ extern "C" {
      * to data is always num_keys.  The
      * last leaf pointer points to the next leaf.
      */
-    typedef struct node {
+    typedef struct BtreeNode_t {
         void ** pointers;
         int * keys;
-        struct node * parent;
+        struct BtreeNode_t * parent;
         bool is_leaf;
         int num_keys;
-        struct node * next; // Used for queue.
-    } node;
+        struct BtreeNode_t * next; // Used for queue.
+    } BtreeNode_t;
 
     // Default order is 10.
 #define DEFAULT_ORDER 20
@@ -89,7 +89,7 @@ extern "C" {
      * @param value the pointer to the object
      * @return the new root node
      */
-    extern node *insert(node * root, int key, void *value);
+    extern BtreeNode_t *BtreeInsert(BtreeNode_t * root, int key, void *value);
 
     /**
      * Finds and returns the record to which a key refers.
@@ -99,7 +99,7 @@ extern "C" {
      * @param verbose true to print info
      * @return 
      */
-    extern record *find(node * root, int key, bool verbose);
+    extern BtreeRecord_t *BTreeFind(BtreeNode_t * root, int key, bool verbose);
 
     /**
      * Prints the B+ tree in the command
@@ -113,7 +113,7 @@ extern "C" {
      * 
      * @param root the root nodes
      */
-    extern void print_tree(node * root);
+    extern void BtreePrintTree(BtreeNode_t * root);
 
     /**
      * Utility function to give the height
@@ -123,7 +123,7 @@ extern "C" {
      * @param root the root node
      * @return the height of the tree
      */
-    extern int height(node * root);
+    extern int BTreeHeight(BtreeNode_t * root);
 
     /**
      * Destroy the tree using the record specific function
@@ -132,7 +132,7 @@ extern "C" {
      * @param freeRecord the record specific function
      * @return NULL;
      */
-    extern node *destroy_tree(node * root, void freeRecord(void *));
+    extern BtreeNode_t *BTreeFree(BtreeNode_t * root, void freeRecord(void *));
 
 #ifdef	__cplusplus
 }

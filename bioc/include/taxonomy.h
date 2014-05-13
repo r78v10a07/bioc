@@ -62,7 +62,7 @@ extern "C" {
          * @param count the number of elements in the leneage array
          * @param taxDB the NCBI Taxonomy database in a bTree index
          */
-        void (*getLineage)(void *self, int **lineage, int *count, node *taxDB);
+        void (*getLineage)(void *self, int **lineage, int *count, BtreeNode_t *taxDB);
 
 
         /**
@@ -114,7 +114,7 @@ extern "C" {
      * @param verbose 1 to print a verbose info
      * @return the NCBI Taxonomy db in a Btree index
      */
-    extern node *TaxonomyDBIndex(char *dir, int verbose);
+    extern BtreeNode_t *TaxonomyDBIndex(char *dir, int verbose);
 
     /**
      * Read the gi_taxid_nucl.dmp.gz file from NCBI Taxonomy and return a Btree 
@@ -124,7 +124,7 @@ extern "C" {
      * @param verbose 1 to print a verbose info
      * @return 
      */
-    extern node *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose);
+    extern BtreeNode_t *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose);
 
 
 #ifdef	__cplusplus
