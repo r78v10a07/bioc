@@ -15,7 +15,7 @@
      * @param start first time
      * @return the time in nanoseconds
      */
-    extern int64_t timespecDiff(struct timespec *stop, struct timespec *start);
+    extern float timespecDiff(struct timespec *stop, struct timespec *start);
 }}}
 
 Usage:
@@ -30,7 +30,7 @@ Usage:
    ...
 
    clock_gettime(CLOCK_MONOTONIC, &stop);
-   printf("The total time was %lu nanosec\n", timespecDiff(&stop, &start));
+   printf("The total time was %.1f nanosec\n", timespecDiff(&stop, &start));
 }}}
 
 ==Calculate the time difference in seconds==
@@ -41,7 +41,7 @@ Usage:
      * @param start first time
      * @return the time in seconds
      */
-    extern int64_t timespecDiffSec(struct timespec *stop, struct timespec *start);
+    extern float timespecDiffSec(struct timespec *stop, struct timespec *start);
 }}}
 
 Usage:
@@ -56,5 +56,5 @@ Usage:
    ...
 
    clock_gettime(CLOCK_MONOTONIC, &stop);
-   printf("The total time was %lu sec\n", timespecDiffSec(&stop, &start));
+   printf("The total time was %.1f sec\n", timespecDiffSec(&stop, &start));
 }}}
