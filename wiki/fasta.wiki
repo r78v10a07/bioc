@@ -279,7 +279,7 @@ int main(int argc, char *argv[]) {
     int gi, verbose;
 
     off_t offset;
-    record * rec;
+    BtreeRecord_t * rec;
 
     // The Gis file, one Gi per line
     FILE *giFile = checkPointerError(fopen(argv[1], "r"), "Can't open the GI file", __FILE__, __LINE__, -1);
@@ -293,13 +293,13 @@ int main(int argc, char *argv[]) {
     verbose = 0;
     
     // Create the Btree from the fasta binary index file
-    node *fBtree = CreateBtreeFromIndex(fIndex, verbose);
+    BtreeNode_t *fBtree = CreateBtreeFromIndex(fIndex, verbose);
 
     while (fscanf(giFile, "%d", &gi) != EOF) {
         /* Get the offset in the fasta file for the GI
          * Return NULL if the Gi is not in the fasta file
          */
-        if ((rec = find(fBtree, gi, false)) != NULL) {
+        if ((rec = BTreeFind(fBtree, gi, false)) != NULL) {
             // Get the fasta entry offset in the big fasta file
             offset = *((off_t *) rec->value);
             // Put the file stream in the correct position in the big fasta file
@@ -315,10 +315,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    /* Destroy the Btree using the system free function (#include <stdlib.h>)
+    /* Free the Btree using the system free function (#include <stdlib.h>)
      * because the btree are offsets
      */
-    destroy_tree(fBtree, free);
+    BTreeFree(fBtree, free);
     fclose(giFile);
     fclose(fIndex);
     fclose(fFasta);
