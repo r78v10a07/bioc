@@ -16,18 +16,18 @@ Two important structures:
 The record and the node structure:
 
 {{{
-    typedef struct record {
+    typedef struct BtreeRecord_t {
         void *value;
-    } record;
+    } BtreeRecord_t;
 
-    typedef struct node {
+    typedef struct BtreeNode_t {
         void ** pointers;
         int * keys;
-        struct node * parent;
+        struct BtreeNode_t * parent;
         bool is_leaf;
         int num_keys;
-        struct node * next; // Used for queue.
-    } node;
+        struct BtreeNode_t * next; // Used for queue.
+    } BtreeNode_t;
 }}}
 
 ==Master insertion function==
@@ -45,14 +45,14 @@ The record and the node structure:
      * @param value the pointer to the object
      * @return the new root node
      */
-    extern node *insert(node * root, int key, void *value);
+    extern BtreeNode_t *BtreeInsert(BtreeNode_t * root, int key, void *value)
 }}}
 
 Usage:
 
 {{{
    FILE *fd;
-   node *root = NULL;
+   BtreeNode_t *root = NULL;
    fasta_l fasta;
   
    // Read the fasta from the file fd and create an index with them 
@@ -60,28 +60,28 @@ Usage:
         /* Insert the position in the file where the fasta 
          * object start using the gi as key
          */
-        root = insert(root, gi, fasta);
+        root = BtreeInsert(root, gi, fasta);
     }
 }}}
 
-==Destroy the Btree==
+Free the Btree==
 
 {{{
     /**
-     * Destroy the tree using the record specific function
+     * Free the tree using the record specific function
      * 
      * @param root the root node
      * @param freeRecord the record specific function
      * @return NULL;
      */
-    extern node *destroy_tree(node * root, void freeRecord(void *));
+    extern BtreeNode_t *BTreeFree(BtreeNode_t * root, void freeRecord(void *));
 }}}
 
 Usage:
 
 {{{
    // Here the fasta->free is a void * to the fasta_l free function
-   destroy_tree(root, fasta->free);
+   BTreeFree(root, fasta->free);
 }}}
 
 ==Finds and returns the record to which a key refers==
@@ -93,13 +93,13 @@ Usage:
      * @param verbose true to print info
      * @return 
      */
-    extern record *find(node * root, int key, bool verbose);
+    extern BtreeRecord_t *BTreeFind(BtreeNode_t * root, int key, bool verbose);
 }}}
 
 Usage:
 
 {{{ 
-   record *rec = find(root,10, false);
+   BtreeRecord_t *rec = BTreeFind(root,10, false);
  
    fasta_l fasta = (fasta_l) rec->value;
 }}}
@@ -119,13 +119,13 @@ Usage:
      * 
      * @param root the root nodes
      */
-    extern void print_tree(node * root);
+    extern void void BtreePrintTree(BtreeNode_t * root);
 }}}
 
 Usage:
 
 {{{
-   print_tree(root);
+   BtreePrintTree(root);
 }}}
 
 ==Utility function to give the height of the tree==
@@ -139,11 +139,11 @@ Usage:
      * @param root the root node
      * @return the height of the tree
      */
-    extern int height(node * root);
+    extern int BTreeHeight(BtreeNode_t * root);
 }}}
 
 Usage:
 
 {{{
-   int h = height(root);
+   int h = BTreeHeight(root);
 }}}
