@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
             sprintf(fasta->header, "%s|%s", ids[gi], ids[fromTo]);
             fasta->toFile(fasta, fo, size);
 
-            freeString(ids, ids_number);
+            freeArrayofPointers((void **)ids, ids_number);
         }
         fasta->free(fasta);
     }
@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
     if (input) free(input);
     if (output) free(output);
     clock_gettime(CLOCK_MONOTONIC, &stop);
-    printf("\n\tThe total time was %lu sec\n\n", timespecDiffSec(&stop, &start));
+    printf("\n\tThe total time was %.1f sec\n\n", timespecDiffSec(&stop, &start));
     return (EXIT_SUCCESS);
 }
 
