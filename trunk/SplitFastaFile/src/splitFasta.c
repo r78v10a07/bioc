@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
     input = output = tmp = NULL;
     size = 80;
     length = offset = name = 0;
-    threads = 2;
+    threads = 1;
     do {
         next_option = getopt_long(argc, argv, short_options, long_options, NULL);
 
@@ -156,11 +156,7 @@ int main(int argc, char** argv) {
                     fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
                 }
             }
-            if (threads != 0) {
-                fasta->printOverlapSegmentsPthread(fasta, fo, length, offset, size, threads, mem);
-            } else {
-                fasta->printOverlapSegments(fasta, fo, length, offset, size);
-            }
+            fasta->splitInSegments(fasta, fo, length, offset, size, threads, mem);
         } else {
             gi = fromTo = -1;
             ids_number = splitString(&ids, ((fasta_l) fasta)->header, "|");
