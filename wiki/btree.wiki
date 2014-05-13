@@ -65,9 +65,6 @@ Usage:
          * object start using the gi as key
          */
         root = BtreeInsert(root, gi, fasta);
-
-        // Free the fasta entry
-        fasta->free(fasta);  
     }
 }}}
 
