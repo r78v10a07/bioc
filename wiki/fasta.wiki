@@ -252,7 +252,7 @@ The structure:
 
 Usage:
 
-Create a binary index file for a big fasta file. Then, read randomly fasta entries from a GI list. In the last program only the GI and offset are in memory.
+Create a binary index file for a big fasta file. Then, read randomly fasta entries from a GI list and print the fasta entry. In the last program only the GI and offset are in memory.
 
 Program to create the index (see source code [https://code.google.com/p/bioc/source/browse/trunk/BuildBtreeIndexFasta/ here]):
 {{{
