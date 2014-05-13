@@ -118,7 +118,7 @@ extern "C" {
 
     /**
      * Read the gi_taxid_nucl.dmp.gz file from NCBI Taxonomy and return a Btree 
-     * index ober the Gi
+     * index of the Gi
      * 
      * @param filename the gi_taxid_nucl.dmp.gz complete path
      * @param verbose 1 to print a verbose info
