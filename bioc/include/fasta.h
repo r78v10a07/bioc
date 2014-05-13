@@ -62,17 +62,6 @@ extern "C" {
         void (*getSegment)(void **outvoid, void * self, char *header, int start, int length);
 
         /**
-         * Creates segments of length with an overlap of offset
-         * 
-         * @param self the container object
-         * @param out the output file 
-         * @param length the length of the segments
-         * @param offset the offset of the segments
-         * @param lineLength the length of the fasta line
-         */
-        void (*printOverlapSegments)(void * self, FILE *out, int length, int offset, int lineLength);
-
-        /**
          * Creates segments of length with an overlap of offset using threads
          * 
          * @param self the container object
@@ -83,7 +72,7 @@ extern "C" {
          * @param threads_number Number of threads
          * @param inMem du the generation in memory
          */
-        void (*printOverlapSegmentsPthread)(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem);
+        void (*splitInSegments)(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem);
 
         /**
          * Extract and print a segments from the start position with length
