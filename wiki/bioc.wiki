@@ -13,8 +13,8 @@ Basic modules:
 
 Bioinformatics modules
 
-  * [fasta Fasta]
-  * [taxonomy Taxonomy]
+  * [fasta Fasta file manipulation]
+  * [taxonomy NCBI Taxonomy database]
 
 Associated to the library there are some applications:
 
