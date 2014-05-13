@@ -143,22 +143,32 @@ extern "C" {
      * Read a fasta entry from the file
      * 
      * @param fp the input file
-     * @param excludeSeq 1 if you want to exclude the sequence 
+     * @param excludeSeq 1 if you want to exclude the sequence and read only the header 
      * @return the fasta entry
      */
     extern fasta_l ReadFasta(FILE *fp, int excludeSeq);
 
     /**
+     * Read the fasta entry using a buffer of characters
+     * 
+     * @param fp the input file
+     * @param bufferSize the number of characters in the buffer
+     * @param excludeSeq 1 if you want to exclude the sequence and read only the header 
+     * @return the fasta entry
+     */
+    fasta_l ReadFastaBuffer(FILE *fp, int bufferSize, int excludeSeq);
+
+    /**
      * Read a fasta entry from a gzipped file
      * 
      * @param fp the gzipped input file
-     * @param excludeSeq 1 if you want to exclude the sequence 
+     * @param excludeSeq 1 if you want to exclude the sequence and read only the header 
      * @return the fasta entry
      */
     extern fasta_l ReadFastaGzip(gzFile fp, int excludeSeq);
 
     /**
-     * Create the fasta index file which include the gi and the offset position
+     * Create a fasta binary index file which include the gi and the offset position
      * 
      * @param fd the input fasta file
      * @param fo the output binary file
@@ -168,7 +178,7 @@ extern "C" {
     extern int CreateFastaIndexToFile(FILE *fd, FILE *fo, int verbose);
 
     /**
-     * Create the fasta index file which include the gi and the offset position
+     * Create a Btree index which include the gi and the offset position
      * 
      * @param fd the input fasta file
      * @param verbose 1 to print info
@@ -177,7 +187,7 @@ extern "C" {
     extern node * CreateBtreeFromFasta(FILE *fd, int verbose);
 
     /**
-     * Create the fasta index file which include the gi and the offset position
+     * Create a fasta binary index file which include the gi and the offset position
      * 
      * @param fd the input fasta gzip file
      * @param fo the output binary file
@@ -187,7 +197,7 @@ extern "C" {
     extern int CreateFastaIndexGzipToFile(gzFile fd, FILE *fo, int verbose);
 
     /**
-     * Create the fasta index file which include the gi and the offset position
+     * Create a Btree index which include the gi and the offset position
      * 
      * @param fd the input fasta file
      * @param verbose 1 to print info

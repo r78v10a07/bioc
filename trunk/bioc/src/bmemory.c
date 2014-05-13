@@ -32,3 +32,19 @@ void *allocate(size_t size, char *file, int line) {
 void *reallocate(void *self, size_t size, char *file, int line){
     return checkPointerError(realloc(self,size), "Can't reallocate memory", file, line, -1);
 }
+
+/**
+ * Free an array of pointers
+ * 
+ * @param str the pointer to be free
+ * @param index the number of strings
+ */
+void freeArrayofPointers(void **pointer, int index) {
+    int i = 0;
+    if (pointer) {
+        for (i = 0; i < index; i++) {
+            if (pointer[i]) free(pointer[i]);
+        }
+        free(pointer);
+    }
+}

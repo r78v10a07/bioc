@@ -11,8 +11,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    
-    #define _CHECK_SELF_P(s) checkPointerError(s, "Null self pointer", __FILE__, __LINE__, -1)
+
+#define _CHECK_SELF_P(s) checkPointerError(s, "Null self pointer", __FILE__, __LINE__, -1)
 
     /**
      * The function allocates memory of size bytes
@@ -33,6 +33,14 @@ extern "C" {
      * @return return a pointer to the reallocated memory
      */
     extern void *reallocate(void *self, size_t size, char *file, int line);
+
+    /**
+     * Free an array of pointers
+     * 
+     * @param str the pointer to be free
+     * @param index the number of strings
+     */
+    extern void freeArrayofPointers(void **pointer, int index);
 
 #ifdef	__cplusplus
 }

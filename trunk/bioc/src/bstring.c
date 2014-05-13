@@ -37,22 +37,6 @@ size_t splitString(char ***dest, char *src, char *delimiter) {
 }
 
 /**
- * Free an array of strings
- * 
- * @param str the pointer to be free
- * @param index the number of strings
- */
-void freeString(char **str, int index) {
-    int i = 0;
-    if (str) {
-        for (i = 0; i < index; i++) {
-            if (str[i]) free(str[i]);
-        }
-        free(str);
-    }
-}
-
-/**
  * Return 0 if the string haystack ends with the string needle
  * 
  * @param haystack the string to be analyzed
