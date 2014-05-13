@@ -42,7 +42,7 @@ extern "C" {
 
     struct taxoner_tax_s {
         int taxId;
-        node *gisIndex;
+        BtreeNode_t *gisIndex;
         taxoner_gi_l gis;
         int gis_numbers;
 
@@ -77,7 +77,7 @@ extern "C" {
      * @param readOffset offset used to overlap the reads
      * @param verbose 1 to print info
      */
-    extern void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, node *fBtree, FILE * fFasta, node *taxDB, int readLength, int readOffset, int verbose);
+    extern void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, BtreeNode_t *fBtree, FILE * fFasta, BtreeNode_t *taxDB, int readLength, int readOffset, int verbose);
 
 
 #ifdef	__cplusplus
