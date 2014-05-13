@@ -148,6 +148,6 @@ The function require around 32 GB RAM due to the size of the gi_taxid_nucl.dmp.g
 
 Examples:
 
-Print the taxonomy lineage from a list of GenBank Gis. The source code [https://code.google.com/p/bioc/source/browse/trunk/TaxLineageFromGi/ here]
+Print the taxonomy lineage from a list of !GenBank Gis. The source code [https://code.google.com/p/bioc/source/browse/trunk/TaxLineageFromGi/ here]
 
-Print the taxonomy lineage from a list of TaxIds. The source code [https://code.google.com/p/bioc/source/browse/trunk/TaxLineageFromTaxId/ here]
+Print the taxonomy lineage from a list of !TaxIds. The source code [https://code.google.com/p/bioc/source/browse/trunk/TaxLineageFromTaxId/ here]
