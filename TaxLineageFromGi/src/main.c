@@ -64,13 +64,13 @@ int main(int argc, char** argv) {
     struct timespec start, stop, mid;
     int i, next_option, verbose, gi;
     const char* const short_options = "vhd:o:g:";
-    char *dir, *output, *tmp, *taxgi, *giName;
-    FILE *nodes, *names, *gis;
+    char *dir, *output, *taxgi, *giName;
+    FILE *gis;
     FILE *fd;
-    node *taxDB = NULL;
-    node *gi_tax = NULL;
-    node *foundTax = NULL;
-    record *rec;
+    BtreeNode_t *taxDB = NULL;
+    BtreeNode_t *gi_tax = NULL;
+    BtreeNode_t *foundTax = NULL;
+    BtreeRecord_t *rec;
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
@@ -121,13 +121,7 @@ int main(int argc, char** argv) {
         print_usage(stderr, -1);
     }
 
-    tmp = allocate(sizeof (char) * (strlen(dir) + 11), __FILE__, __LINE__);
-    sprintf(tmp, "%s/nodes.dmp", dir);
-    nodes = checkPointerError(fopen(tmp, "r"), "Can't open the nodes file", __FILE__, __LINE__, -1);
-    sprintf(tmp, "%s/names.dmp", dir);
-    names = checkPointerError(fopen(tmp, "r"), "Can't open the names file", __FILE__, __LINE__, -1);
     fd = checkPointerError(fopen(output, "w"), "Can't open output file", __FILE__, __LINE__, -1);
-
     taxgi = allocate(sizeof (char) * (strlen(dir) + 31), __FILE__, __LINE__);
     sprintf(taxgi, "%s/gi_taxid_nucl.dmp.gz", dir);
 
@@ -136,22 +130,22 @@ int main(int argc, char** argv) {
     clock_gettime(CLOCK_MONOTONIC, &mid);
     if (verbose) printf("Reading the Taxonomy database ... ");
     fflush(stdout);
-    taxDB = TaxonomyDBIndex(nodes, names);
+    taxDB = TaxonomyDBIndex(dir, verbose);
     clock_gettime(CLOCK_MONOTONIC, &stop);
-    if (verbose) printf("%lu sec\n", timespecDiffSec(&stop, &mid));
+    if (verbose) printf("%.1f sec\n", timespecDiffSec(&stop, &mid));
     fflush(stdout);
 
-    printf("The Btree has a height of %d\n", height(taxDB));
+    printf("The Btree has a height of %d\n", BTreeHeight(taxDB));
 
     clock_gettime(CLOCK_MONOTONIC, &mid);
     if (verbose) printf("Reading the Taxonomy-Nucleotide database ... ");
     fflush(stdout);
     gi_tax = TaxonomyNuclIndex(taxgi, verbose);
     clock_gettime(CLOCK_MONOTONIC, &stop);
-    if (verbose) printf("%lu sec\n", timespecDiffSec(&stop, &mid));
+    if (verbose) printf("%.1f sec\n", timespecDiffSec(&stop, &mid));
     fflush(stdout);
 
-    printf("The Btree has a height of %d\n", height(gi_tax));
+    printf("The Btree has a height of %d\n", BTreeHeight(gi_tax));
 
     lineToPrint = allocate(sizeof (char *) * 8, __FILE__, __LINE__);
     for (i = 0; i < 8; i++) {
@@ -162,11 +156,11 @@ int main(int argc, char** argv) {
     fprintf(fd, "strain\tspecies\tgenus\tfamily\torder\tclass\tphylum\tsuperkingdom\n");
     while ((read = getline(&line, &len, gis)) != -1) {
         sscanf(line, "%d\n", &gi);
-        if ((rec = find(gi_tax, gi, false)) != NULL) {
-            if ((rec = find(taxDB, *((int *) rec->value), false)) != NULL) {
+        if ((rec = BTreeFind(gi_tax, gi, false)) != NULL) {
+            if ((rec = BTreeFind(taxDB, *((int *) rec->value), false)) != NULL) {
                 tax = (taxonomy_l) rec->value;
-                if (find(foundTax, tax->taxId, false) == NULL) {
-                    foundTax = insert(foundTax, tax->taxId, tax);
+                if (BTreeFind(foundTax, tax->taxId, false) == NULL) {
+                    foundTax = BtreeInsert(foundTax, tax->taxId, tax);
                     for (i = 0; i < 8; i++) {
                         lineToPrint[i][0] = '\t';
                         lineToPrint[i][1] = '\0';
@@ -175,11 +169,11 @@ int main(int argc, char** argv) {
                     if (next_option != -1) {
                         sprintf(lineToPrint[next_option], "%s (%d)\t", tax->name, tax->taxId);
                     }
-                    if ((rec = find(taxDB, tax->parentTaxId, false)) != NULL) {
+                    if ((rec = BTreeFind(taxDB, tax->parentTaxId, false)) != NULL) {
                         tax = (taxonomy_l) rec->value;
                         tax->getLineage(tax, &lineage, &lineage_count, taxDB);
                         for (i = 0; i < lineage_count; i++) {
-                            if ((rec = find(taxDB, lineage[i], false)) != NULL) {
+                            if ((rec = BTreeFind(taxDB, lineage[i], false)) != NULL) {
                                 tax = (taxonomy_l) rec->value;
                                 next_option = getPrintIndex(tax->rank, 0);
                                 if (next_option != -1) {
@@ -201,24 +195,21 @@ int main(int argc, char** argv) {
     }
 
     tax = CreateTaxonomy();
-    destroy_tree(taxDB, tax->free);
-    destroy_tree(gi_tax, free);
-    destroy_tree(foundTax, NULL);
+    BTreeFree(taxDB, tax->free);
+    BTreeFree(gi_tax, free);
+    BTreeFree(foundTax, NULL);
     tax->free(tax);
 
-    freeString(lineToPrint, 8);
+    freeArrayofPointers((void **)lineToPrint, 8);
     if (fd) fclose(fd);
     if (line) free(line);
     if (giName) free(giName);
     if (gis) fclose(gis);
     if (taxgi) free(taxgi);
-    if (tmp) free(tmp);
-    if (nodes) fclose(nodes);
-    if (names) fclose(names);
     if (dir) free(dir);
     if (output) free(output);
     clock_gettime(CLOCK_MONOTONIC, &stop);
-    printf("\n\tThe total time was %lu sec\n\n", timespecDiffSec(&stop, &start));
+    printf("\n\tThe total time was %.1f sec\n\n", timespecDiffSec(&stop, &start));
     return (EXIT_SUCCESS);
 }
 
