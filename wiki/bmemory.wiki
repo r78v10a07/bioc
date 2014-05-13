@@ -48,7 +48,7 @@ Usage:
   /* Reallocate the memory
    * If error exit the program and print the source file and line
    */ 
-  a = allocate(a, sizeof(char) * 20, __FILE__, __LINE__);
+  a = reallocate(a, sizeof(char) * 20, __FILE__, __LINE__);
 }}}
 
 ==Free an array of pointers==
