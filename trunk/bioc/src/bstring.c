@@ -24,11 +24,10 @@ size_t splitString(char ***dest, char *src, char *delimiter) {
     char *token;
     char *srccpy = strdup(src);
 
-    *dest = NULL;    
-    token = strtok(srccpy, delimiter);   
+    *dest = NULL;
+    token = strtok(srccpy, delimiter);
     while (token) {
-        *dest = (char **) realloc(*dest, sizeof (char **) * (count + 1));
-        checkPointerError(*dest, "Can't reallocate memory", __FILE__, __LINE__, -1);
+        *dest = (char **) checkPointerError(realloc(*dest, sizeof (char **) * (count + 1)), "Can't allocate memory", __FILE__, __LINE__, -1);
         (*dest)[count++] = strdup(token);
         token = strtok(NULL, delimiter);
     }

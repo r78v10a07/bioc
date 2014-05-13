@@ -209,53 +209,7 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
     }
 }
 
-/**
- * Creates segments of length with an overlap of offset
- * 
- * @param self the container object
- * @param out the output file 
- * @param length the length of the segments
- * @param offset the offset of the segments
- * @param lineLength the length of the fasta line
- */
-void printOverlapSegments(void * self, FILE *out, int length, int offset, int lineLength) {
-    _CHECK_SELF_P(self);
-    int i, index;
-    char **ids;
-    int ids_number;
-    size_t size = (strlen(((fasta_l) self)->header)) + 1000;
-    char *header = allocate(sizeof (char) * size, __FILE__, __LINE__);
-
-    memset(header, 0, size);
-    ids_number = splitString(&ids, ((fasta_l) self)->header, "|");
-    if (ids_number % 2 == 0) {
-        strcpy(header, ((fasta_l) self)->header);
-        strcat(header, "|from-to|");
-    } else {
-        for (i = 0; i < ids_number - 1; i++) {
-            strcat(header, ids[i]);
-            strcat(header, "|");
-        }
-        strcat(header, "from-to|");
-    }
-
-    index = strlen(header);
-    for (i = 0;; i += offset) {
-        header[index] = '\0';
-        if (ids_number % 2 == 0) {
-            sprintf(header, "%s%d-%d", header, i, i + length);
-        } else {
-            sprintf(header, "%s%d-%d|%s", header, i, i + length, ids[ids_number - 1]);
-        }
-        printSegment(self, out, header, i, length, lineLength);
-        if (i + length >= ((fasta_l) self)->len) break;
-    }
-
-    freeArrayofPointers((void **) ids, ids_number);
-    free(header);
-}
-
-void *thread_function(void *arg) {
+void *pthreadSplitInSegments(void *arg) {
     thread_param_t *parms = ((thread_param_t*) arg);
     void * self = parms->self;
     int i, index;
@@ -298,7 +252,7 @@ void *thread_function(void *arg) {
     return NULL;
 }
 
-void *thread_functionInMem(void *arg) {
+void *pthreadSplitInSegmentsInMem(void *arg) {
     thread_param_t *parms = ((thread_param_t*) arg);
     void * self = parms->self;
     int i, index;
@@ -356,7 +310,7 @@ void *thread_functionInMem(void *arg) {
  * @param threads_number Number of threads
  * @param inMem du the generation in memory
  */
-void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem) {
+void splitInSegments(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem) {
     _CHECK_SELF_P(self);
     int i, j, reads, numPerThread, thread_cr_res, thread_join_res;
     pthread_t *threads = allocate(sizeof (pthread_t) * threads_number, __FILE__, __LINE__);
@@ -400,12 +354,12 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
         if (inMem == 0) {
             thread_cr_res = pthread_create(&threads[i],
                     NULL,
-                    thread_function,
+                    pthreadSplitInSegments,
                     (void*) &(tp[i]));
         } else {
             thread_cr_res = pthread_create(&threads[i],
                     NULL,
-                    thread_functionInMem,
+                    pthreadSplitInSegmentsInMem,
                     (void*) &(tp[i]));
         }
         if (thread_cr_res != 0) {
@@ -421,8 +375,7 @@ void printOverlapSegmentsPthread(void * self, FILE *out, int length, int offset,
             checkPointerError(NULL, "JOIN ERROR", __FILE__, __LINE__, -1);
         }
         if (inMem == 0) {
-            fd = fopen(tFiles[i], "r");
-            checkPointerError(fd, "Can't open temporal file", __FILE__, __LINE__, -1);
+            fd = checkPointerError(fopen(tFiles[i], "r"), "Can't open temporal file", __FILE__, __LINE__, -1);
 
             while (0 < (bytes = fread(buffer, 1, sizeof (buffer), fd))) {
                 fwrite(buffer, 1, bytes, out);
@@ -459,9 +412,8 @@ fasta_l CreateFasta() {
     self->free = &freeFasta;
     self->setHeader = &setHeader;
     self->setSeq = &setSeq;
-    self->printOverlapSegments = &printOverlapSegments;
+    self->splitInSegments = &splitInSegments;
     self->printSegment = &printSegment;
-    self->printOverlapSegmentsPthread = &printOverlapSegmentsPthread;
     self->toFile = &toFileFasta;
     self->getSegment = &getSegment;
     self->getGi = &getGi;
