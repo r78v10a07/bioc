@@ -133,7 +133,7 @@ The structure:
 
 ==Read the gi_taxid_nucl.dmp file from NCBI Taxonomy and return a Btree index==
 
-This function reads the [ftp://ftp.ncbi.nih.gov/pub/taxonomy/gi_taxid_nucl.dmp.gz gi_taxid_nucl.dmp.gz] uncompressed file and create a btree Btree] structure. This index can be used to assign the taxId to the GenBank Gi. 
+This function reads the [ftp://ftp.ncbi.nih.gov/pub/taxonomy/gi_taxid_nucl.dmp.gz gi_taxid_nucl.dmp.gz] uncompressed file and create a [btree Btree] structure. This index can be used to assign the taxId to the !GenBank Gi. 
 
 The function require around 32 GB RAM due to the size of the gi_taxid_nucl.dmp.gz file. 
 
