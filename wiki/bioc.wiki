@@ -1,6 +1,8 @@
 #labels Featured
 The BioC is a C library for Bioinformatics tools.
 
+Nowadays, working with “mountains” of data is a common task on Bioinformatics. Frequently, high level programming languages like Perl, Python or even Java are not fast enough to process data efficiently. In this case, low level languages as C can be the difference between 5 days and a few hours of processing. Prototypes programs can be easily developed with high level languages just as a proof of concept. However, optimized code, in low level languages, are needed to get down this “mountains” of data.
+
 Basic modules:
 
   * [berror Error]
