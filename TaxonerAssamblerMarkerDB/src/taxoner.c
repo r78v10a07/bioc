@@ -33,7 +33,6 @@ void freeTaxonerGi(void *self) {
         if (((taxoner_gi_l) self)->fromTo[i]) free(((taxoner_gi_l) self)->fromTo[i]);
     }
     if (((taxoner_gi_l) self)->fromTo) free(((taxoner_gi_l) self)->fromTo);
-    free(((taxoner_gi_l) self));
 }
 
 /**
@@ -45,9 +44,10 @@ void freeTaxonerTax(void *self) {
     int i;
     _CHECK_SELF_P(self);
     for (i = 0; i < ((taxoner_tax_l) self)->gis_numbers; i++) {
-        (((taxoner_tax_l) self)->gis[i]).free(&(((taxoner_tax_l) self)->gis[i]));
+        freeTaxonerGi(&(((taxoner_tax_l) self)->gis[i]));
     }
-    if (((taxoner_tax_l) self)->gisIndex) destroy_tree(((taxoner_tax_l) self)->gisIndex, free);
+    free(((taxoner_tax_l) self)->gis);
+    if (((taxoner_tax_l) self)->gisIndex) BTreeFree(((taxoner_tax_l) self)->gisIndex, free);
     free(((taxoner_tax_l) self));
 }
 
@@ -62,7 +62,9 @@ static int cmpFromTo(const void *p1, const void *p2) {
  */
 void sortFromTo(void *self) {
     _CHECK_SELF_P(self);
-    qsort(((taxoner_gi_l) self)->fromTo, ((taxoner_gi_l) self)->fromTo_number, sizeof (int *), cmpFromTo);
+    if (((taxoner_gi_l) self)->fromTo) {
+        qsort(((taxoner_gi_l) self)->fromTo, ((taxoner_gi_l) self)->fromTo_number, sizeof (int *), cmpFromTo);
+    }
 }
 
 /**
@@ -85,7 +87,6 @@ void InitTaxonerGi(taxoner_gi_l self) {
  */
 taxoner_gi_l CreateTaxonerGi() {
     taxoner_gi_l self = allocate(sizeof (struct taxoner_gi_s), __FILE__, __LINE__);
-
     InitTaxonerGi(self);
     return self;
 }
@@ -97,7 +98,6 @@ taxoner_gi_l CreateTaxonerGi() {
  */
 taxoner_tax_l CreateTaxonerTax() {
     taxoner_tax_l self = allocate(sizeof (struct taxoner_tax_s), __FILE__, __LINE__);
-
     self->taxId = -1;
     self->gis = NULL;
     self->gis_numbers = 0;
@@ -118,15 +118,16 @@ taxoner_tax_l CreateTaxonerTax() {
  * @param readOffset offset used to overlap the reads
  * @param verbose 1 to print info
  */
-void printTaxwithReads(FILE **outs, char **ids, int ids_number, taxoner_tax_l tax2, node *fBtree, FILE * fFasta, node *taxDB, int readLength, int readOffset, int verbose) {
+void printTaxwithReads(FILE **outs, char **ids, int ids_number, taxoner_tax_l tax2, BtreeNode_t *fBtree, FILE * fFasta, BtreeNode_t *taxDB, int readLength, int readOffset, int verbose) {
     int j, k, i;
     taxoner_gi_l tmpTaxGi;
     taxonomy_l taxon;
     fasta_l fna;
-    record *rec;
+    BtreeRecord_t *rec;
     off_t offset;
     int nt, reads;
     int headerSize = 1000;
+
     char *header = allocate(sizeof (char) * headerSize, __FILE__, __LINE__);
 
     nt = reads = 0;
@@ -135,9 +136,9 @@ void printTaxwithReads(FILE **outs, char **ids, int ids_number, taxoner_tax_l ta
             tmpTaxGi = &(tax2->gis[j]);
             taxon = NULL;
             fna = NULL;
-            if ((rec = find(taxDB, tax2->taxId, false)) != NULL) {
+            if ((rec = BTreeFind(taxDB, tax2->taxId, false)) != NULL) {
                 taxon = ((taxonomy_l) rec->value);
-                if ((rec = find(fBtree, tmpTaxGi->gi, false)) != NULL) {
+                if ((rec = BTreeFind(fBtree, tmpTaxGi->gi, false)) != NULL) {
                     offset = *((off_t *) rec->value);
                     fseeko(fFasta, offset, SEEK_SET);
                     fna = ReadFasta(fFasta, 0);
@@ -146,26 +147,29 @@ void printTaxwithReads(FILE **outs, char **ids, int ids_number, taxoner_tax_l ta
                         nt += (tmpTaxGi->fromTo[k][1] - tmpTaxGi->fromTo[k][0]);
                         reads += ((tmpTaxGi->fromTo[k][1] - tmpTaxGi->fromTo[k][0] - readLength) / readOffset + 1);
                         for (i = 0; i < ids_number; i++) {
-                            if (strcmp(taxon->rank, ids[i]) == 0) {
+                            if (strcmp(taxon->rank, ids[i]) == 0) {                                
                                 if (strlen(fna->header) > headerSize - 100) {
                                     headerSize = strlen(fna->header);
                                     header = reallocate(header, sizeof (char) * headerSize, __FILE__, __LINE__);
                                 }
                                 sprintf(header, "%d|%d-%d", tmpTaxGi->gi, tmpTaxGi->fromTo[k][0], tmpTaxGi->fromTo[k][1]);
                                 fna->printSegment(fna, outs[i + 2], header, tmpTaxGi->fromTo[k][0], tmpTaxGi->fromTo[k][1] - tmpTaxGi->fromTo[k][0], 80);
+                                fflush(outs[i + 2]);
+                                break;
                             }
                         }
                     }
                     if (verbose) {
-                        printf("%10d\t%6d\t%50s\t%15s\t%10d\t%12d\t%16d\t%18d\n",
+                        printf("%10d\t%6d\t%50s\t%15s\t%10d\t%12d\t%18d\n",
                                 tmpTaxGi->gi, tax2->taxId, taxon->name, taxon->rank,
-                                fna->len, nt, fna->len - nt, reads);
+                                fna->len, nt, reads);
                         fflush(stdout);
                     }
-                    fprintf(outs[0], "%10d\t%6d\t%50s\t%15s\t%10d\t%12d\t%16d\t%18d\n",
+                    fprintf(outs[0], "%10d\t%6d\t%50s\t%15s\t%10d\t%12d\t%18d\n",
                             tmpTaxGi->gi, tax2->taxId, taxon->name, taxon->rank,
-                            fna->len, nt, fna->len - nt, reads);
+                            fna->len, nt, reads);
                     fna->free(fna);
+                    fflush(outs[0]);
                 } else {
                     if (verbose) {
                         printf("The GI %d does not have a fasta seq\n", tmpTaxGi->gi);
@@ -175,6 +179,7 @@ void printTaxwithReads(FILE **outs, char **ids, int ids_number, taxoner_tax_l ta
                 }
             } else {
                 if (verbose) {
+
                     printf("Taxa %d is not in the current NCBI Taxonomy DB\n", tax2->taxId);
                     fflush(stdout);
                 }
@@ -182,91 +187,88 @@ void printTaxwithReads(FILE **outs, char **ids, int ids_number, taxoner_tax_l ta
             }
         }
     }
+    free(header);
 }
 
-void checkTaxForContReads(FILE **outs, char **ids, int ids_number, taxoner_tax_l tax, node *fBtree, FILE * fFasta, node *taxDB, int readLength, int readOffset, int verbose) {
+void checkTaxForContReads(FILE **outs, char **ids, int ids_number, taxoner_tax_l tax, BtreeNode_t *fBtree, FILE * fFasta, BtreeNode_t *taxDB, int readLength, int readOffset, int verbose) {
     taxoner_tax_l tax2;
     taxoner_gi_l tmpTaxGi;
-    record *rec;
+    BtreeRecord_t *rec;
     int *index;
 
     int i, taxGi, gi, from, to;
+    tax2 = CreateTaxonerTax();
+    tax2->taxId = tax->taxId;
+    tmpTaxGi = NULL;
 
-    if (tax) {
-        tax2 = CreateTaxonerTax();
-        tax2->taxId = tax->taxId;
-
-        tmpTaxGi = NULL;
-        gi = from = to = 0;
-        for (taxGi = 0; taxGi < tax->gis_numbers; taxGi++) {
-            tmpTaxGi = &(tax->gis[taxGi]);
-            tmpTaxGi->sortFromTo(tmpTaxGi);
-            gi = 1;
-            from = tmpTaxGi->fromTo[0][0];
-            to = tmpTaxGi->fromTo[0][1];
-            for (i = 1; i < tmpTaxGi->fromTo_number; i++) {
-                if (tmpTaxGi->fromTo[i][0] < to) {
-                    gi++;
-                    to = tmpTaxGi->fromTo[i][1];
-                } else {
-                    if (gi > 1) {
-                        if ((rec = find(tax2->gisIndex, tmpTaxGi->gi, false)) != NULL) {
-                            index = (int *) rec->value;
-                            tax2->gis[*index].fromTo = checkPointerError(realloc(tax2->gis[*index].fromTo, sizeof (int *) * (tax2->gis[*index].fromTo_number + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
-                            tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
-                            tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number][0] = from;
-                            tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number][1] = to;
-                            tax2->gis[*index].fromTo_number++;
-                        } else {
-                            tax2->gis = checkPointerError(realloc(tax2->gis, sizeof (struct taxoner_gi_s) * (tax2->gis_numbers + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
-
-                            InitTaxonerGi(&(tax2->gis[tax2->gis_numbers]));
-                            tax2->gis[tax2->gis_numbers].gi = tmpTaxGi->gi;
-                            tax2->gis[tax2->gis_numbers].fromTo = allocate(sizeof (int *) * 1, __FILE__, __LINE__);
-                            tax2->gis[tax2->gis_numbers].fromTo[0] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
-                            tax2->gis[tax2->gis_numbers].fromTo[0][0] = from;
-                            tax2->gis[tax2->gis_numbers].fromTo[0][1] = to;
-                            tax2->gis[tax2->gis_numbers].fromTo_number = 1;
-
-                            index = allocate(sizeof (int), __FILE__, __LINE__);
-                            *index = tax2->gis_numbers;
-                            tax2->gisIndex = insert(tax2->gisIndex, tax2->gis[tax2->gis_numbers].gi, index);
-                            tax2->gis_numbers++;
-                        }
-                    }
-                    gi = 1;
-                    from = tmpTaxGi->fromTo[i][0];
-                    to = tmpTaxGi->fromTo[i][1];
-                }
-            }
-        }
-        if (gi > 1) {
-            if ((rec = find(tax2->gisIndex, tmpTaxGi->gi, false)) != NULL) {
-                index = (int *) rec->value;
-                tax2->gis[*index].fromTo = checkPointerError(realloc(tax2->gis[*index].fromTo, sizeof (int *) * (tax2->gis[*index].fromTo_number + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
-                tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
-                tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number][0] = from;
-                tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number][1] = to;
-                tax2->gis[*index].fromTo_number++;
+    gi = from = to = 0;
+    for (taxGi = 0; taxGi < tax->gis_numbers; taxGi++) {
+        tmpTaxGi = &(tax->gis[taxGi]);
+        tmpTaxGi->sortFromTo(tmpTaxGi);
+        gi = 1;
+        from = tmpTaxGi->fromTo[0][0];
+        to = tmpTaxGi->fromTo[0][1];
+        for (i = 1; i < tmpTaxGi->fromTo_number; i++) {
+            if (tmpTaxGi->fromTo[i][0] < to) {
+                gi++;
+                to = tmpTaxGi->fromTo[i][1];
             } else {
-                tax2->gis = checkPointerError(realloc(tax2->gis, sizeof (struct taxoner_gi_s) * (tax2->gis_numbers + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
-                InitTaxonerGi(&(tax2->gis[tax2->gis_numbers]));
-                tax2->gis[tax2->gis_numbers].gi = tmpTaxGi->gi;
-                tax2->gis[tax2->gis_numbers].fromTo = allocate(sizeof (int *) * 1, __FILE__, __LINE__);
-                tax2->gis[tax2->gis_numbers].fromTo[0] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
-                tax2->gis[tax2->gis_numbers].fromTo[0][0] = from;
-                tax2->gis[tax2->gis_numbers].fromTo[0][1] = to;
-                tax2->gis[tax2->gis_numbers].fromTo_number = 1;
+                if (gi > 1) {
+                    if ((rec = BTreeFind(tax2->gisIndex, tmpTaxGi->gi, false)) != NULL) {
+                        index = (int *) rec->value;
+                        tax2->gis[*index].fromTo = checkPointerError(realloc(tax2->gis[*index].fromTo, sizeof (int **) * (tax2->gis[*index].fromTo_number + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
+                        tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
+                        tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number][0] = from;
+                        tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number][1] = to;
+                        tax2->gis[*index].fromTo_number++;
+                    } else {
+                        tax2->gis = checkPointerError(realloc(tax2->gis, sizeof (struct taxoner_gi_s) * (tax2->gis_numbers + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
 
-                index = allocate(sizeof (int), __FILE__, __LINE__);
-                *index = tax2->gis_numbers;
-                tax2->gisIndex = insert(tax2->gisIndex, tax2->gis[tax2->gis_numbers].gi, index);
+                        InitTaxonerGi(&(tax2->gis[tax2->gis_numbers]));
+                        tax2->gis[tax2->gis_numbers].gi = tmpTaxGi->gi;
+                        tax2->gis[tax2->gis_numbers].fromTo = allocate(sizeof (int **) * 1, __FILE__, __LINE__);
+                        tax2->gis[tax2->gis_numbers].fromTo[0] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
+                        tax2->gis[tax2->gis_numbers].fromTo[0][0] = from;
+                        tax2->gis[tax2->gis_numbers].fromTo[0][1] = to;
+                        tax2->gis[tax2->gis_numbers].fromTo_number = 1;
+
+                        index = allocate(sizeof (int), __FILE__, __LINE__);
+                        *index = tax2->gis_numbers;
+                        tax2->gisIndex = BtreeInsert(tax2->gisIndex, tax2->gis[tax2->gis_numbers].gi, index);
+                        tax2->gis_numbers++;
+                    }
+                }
+                gi = 1;
+                from = tmpTaxGi->fromTo[i][0];
+                to = tmpTaxGi->fromTo[i][1];
             }
         }
-        printTaxwithReads(outs, ids, ids_number, tax2, fBtree, fFasta, taxDB, readLength, readOffset, verbose);
-        tax2->free(tax2);
-        tax->free(tax);
     }
+    if (gi > 1) {
+        if ((rec = BTreeFind(tax2->gisIndex, tmpTaxGi->gi, false)) != NULL) {
+            index = (int *) rec->value;
+            tax2->gis[*index].fromTo = checkPointerError(realloc(tax2->gis[*index].fromTo, sizeof (int **) * (tax2->gis[*index].fromTo_number + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
+            tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
+            tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number][0] = from;
+            tax2->gis[*index].fromTo[tax2->gis[*index].fromTo_number][1] = to;
+            tax2->gis[*index].fromTo_number++;
+        } else {
+            tax2->gis = checkPointerError(realloc(tax2->gis, sizeof (struct taxoner_gi_s) * (tax2->gis_numbers + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
+            InitTaxonerGi(&(tax2->gis[tax2->gis_numbers]));
+            tax2->gis[tax2->gis_numbers].gi = tmpTaxGi->gi;
+            tax2->gis[tax2->gis_numbers].fromTo = allocate(sizeof (int **) * 1, __FILE__, __LINE__);
+            tax2->gis[tax2->gis_numbers].fromTo[0] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
+            tax2->gis[tax2->gis_numbers].fromTo[0][0] = from;
+            tax2->gis[tax2->gis_numbers].fromTo[0][1] = to;
+            tax2->gis[tax2->gis_numbers].fromTo_number = 1;
+
+            index = allocate(sizeof (int), __FILE__, __LINE__);
+            *index = tax2->gis_numbers;
+            tax2->gisIndex = BtreeInsert(tax2->gisIndex, tax2->gis[tax2->gis_numbers].gi, index);
+        }
+    }
+    printTaxwithReads(outs, ids, ids_number, tax2, fBtree, fFasta, taxDB, readLength, readOffset, verbose);
+    tax2->free(tax2);
 }
 
 /**
@@ -283,7 +285,7 @@ void checkTaxForContReads(FILE **outs, char **ids, int ids_number, taxoner_tax_l
  * @param readOffset offset used to overlap the reads
  * @param verbose 1 to print info
  */
-void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, node *fBtree, FILE * fFasta, node *taxDB, int readLength, int readOffset, int verbose) {
+void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, BtreeNode_t *fBtree, FILE * fFasta, BtreeNode_t *taxDB, int readLength, int readOffset, int verbose) {
     int *index, lastTaxId;
     taxoner_tax_l tax;
     char *line = NULL;
@@ -291,7 +293,7 @@ void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, 
     ssize_t read;
     int rgi, taxId, taxGi, rfrom, rto;
     float rScore;
-    record *rec;
+    BtreeRecord_t *rec;
     char **ids = NULL;
     int ids_number = 0;
     FILE **outs;
@@ -317,19 +319,17 @@ void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, 
     lastTaxId = -1;
     tax = NULL;
 
-    fprintf(outs[0], "%10s\t%6s\t%50s\t%15s\t%10s\t%12s\t%16s\t%18s\n"
+    fprintf(outs[0], "%10s\t%6s\t%50s\t%15s\t%10s\t%12s\t%18s\n"
             , "gi", "taxid", "tax name", "rank",
-            "bp",
+            "total bp",
             "assigned bp",
-            "not assigned bp",
             "consecutive reads");
     if (verbose) {
         printf("Starting the Taxonomy.txt file parser\n");
-        printf("\n%10s\t%6s\t%50s\t%15s\t%10s\t%12s\t%16s\t%18s\n"
+        printf("\n%10s\t%6s\t%50s\t%15s\t%10s\t%12s\t%18s\n"
                 , "gi", "taxid", "tax name", "rank",
-                "bp",
+                "total bp",
                 "assigned bp",
-                "not assigned bp",
                 "consecutive reads");
         fflush(stdout);
     }
@@ -340,13 +340,16 @@ void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, 
         }
         if (rScore >= score) {
             if (lastTaxId != taxId) {
-                checkTaxForContReads(outs, ids, ids_number, tax, fBtree, fFasta, taxDB, readLength, readOffset, verbose);
+                if (tax) {
+                    checkTaxForContReads(outs, ids, ids_number, tax, fBtree, fFasta, taxDB, readLength, readOffset, verbose);
+                    tax->free(tax);
+                }
                 tax = CreateTaxonerTax();
                 tax->taxId = taxId;
                 tax->gis = CreateTaxonerGi();
                 tax->gis_numbers = 1;
                 tax->gis->gi = rgi;
-                tax->gis->fromTo = allocate(sizeof (int *) * 1, __FILE__, __LINE__);
+                tax->gis->fromTo = allocate(sizeof (int **) * 1, __FILE__, __LINE__);
                 tax->gis->fromTo[0] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
                 tax->gis->fromTo[0][0] = rfrom;
                 tax->gis->fromTo[0][1] = rto;
@@ -354,12 +357,13 @@ void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, 
 
                 index = allocate(sizeof (int), __FILE__, __LINE__);
                 *index = 0;
-                tax->gisIndex = insert(tax->gisIndex, rgi, index);
+                tax->gisIndex = BtreeInsert(tax->gisIndex, rgi, index);
                 lastTaxId = taxId;
             } else {
-                if ((rec = find(tax->gisIndex, rgi, false)) != NULL) {
+                if ((rec = BTreeFind(tax->gisIndex, rgi, false)) != NULL) {
                     index = (int *) rec->value;
-                    tax->gis[*index].fromTo = checkPointerError(realloc(tax->gis[*index].fromTo, sizeof (int *) * (tax->gis[*index].fromTo_number + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
+                    tax->gis[*index].fromTo = checkPointerError(realloc(tax->gis[*index].fromTo, sizeof (int **) * (tax->gis[*index].fromTo_number + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
+
                     tax->gis[*index].fromTo[tax->gis[*index].fromTo_number] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
                     tax->gis[*index].fromTo[tax->gis[*index].fromTo_number][0] = rfrom;
                     tax->gis[*index].fromTo[tax->gis[*index].fromTo_number][1] = rto;
@@ -368,7 +372,7 @@ void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, 
                     tax->gis = checkPointerError(realloc(tax->gis, sizeof (struct taxoner_gi_s) * (tax->gis_numbers + 1)), "Can't reallocate memory", __FILE__, __LINE__, -1);
                     InitTaxonerGi(&(tax->gis[tax->gis_numbers]));
                     tax->gis[tax->gis_numbers].gi = rgi;
-                    tax->gis[tax->gis_numbers].fromTo = allocate(sizeof (int *) * 1, __FILE__, __LINE__);
+                    tax->gis[tax->gis_numbers].fromTo = allocate(sizeof (int **) * 1, __FILE__, __LINE__);
                     tax->gis[tax->gis_numbers].fromTo[0] = allocate(sizeof (int) * 2, __FILE__, __LINE__);
                     tax->gis[tax->gis_numbers].fromTo[0][0] = rfrom;
                     tax->gis[tax->gis_numbers].fromTo[0][1] = rto;
@@ -376,14 +380,16 @@ void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, 
 
                     index = allocate(sizeof (int), __FILE__, __LINE__);
                     *index = tax->gis_numbers;
-                    tax->gisIndex = insert(tax->gisIndex, tax->gis[tax->gis_numbers].gi, index);
+                    tax->gisIndex = BtreeInsert(tax->gisIndex, tax->gis[tax->gis_numbers].gi, index);
                     tax->gis_numbers++;
                 }
             }
         }
     }
-    checkTaxForContReads(outs, ids, ids_number, tax, fBtree, fFasta, taxDB, readLength, readOffset, verbose);
-
+    if (tax) {
+        checkTaxForContReads(outs, ids, ids_number, tax, fBtree, fFasta, taxDB, readLength, readOffset, verbose);
+        tax->free(tax);
+    }
     if (verbose) {
         printf("\n");
         fflush(stdout);
@@ -391,7 +397,7 @@ void ParseTaxonerResult(char *output, char *rankToPrint, FILE *fd, float score, 
     for (rgi = 0; rgi < ids_number + 2; rgi++) {
         fclose(outs[rgi]);
     }
-    freeString(ids, ids_number);
+    freeArrayofPointers((void **) ids, ids_number);
     free(outs);
     if (line) free(line);
 }

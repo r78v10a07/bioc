@@ -57,8 +57,8 @@ int main(int argc, char** argv) {
     float score;
     FILE *fInput, *fFasta, *fIndex;
     gzFile gInput, gFasta;
-    node *taxDB = NULL;
-    node *fBtree = NULL;
+    BtreeNode_t *taxDB = NULL;
+    BtreeNode_t *fBtree = NULL;
     taxonomy_l tax;
     int readLength, readOffset;
     char *rankToPrint;
@@ -181,10 +181,10 @@ int main(int argc, char** argv) {
         gzclose(gFasta);
     }
 
-    destroy_tree(fBtree, free);
+    BTreeFree(fBtree, free);
 
     tax = CreateTaxonomy();
-    destroy_tree(taxDB, tax->free);
+    BTreeFree(taxDB, tax->free);
     tax->free(tax);
 
     if (rankToPrint) free(rankToPrint);
@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
     if (index) free(index);
     if (taxDir) free(taxDir);
     clock_gettime(CLOCK_MONOTONIC, &stop);
-    printf("\n\tThe total time was %lu sec\n\n", timespecDiffSec(&stop, &start));
+    printf("\n\tThe total time was %.1f sec\n\n", timespecDiffSec(&stop, &start));
     return (EXIT_SUCCESS);
 }
 
