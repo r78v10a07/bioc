@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "btree.h"
+#include "berror.h"
+#include "bmemory.h"
 
 /* The order determines the maximum and minimum
  * number of entries (keys and pointers) in any
@@ -43,7 +45,7 @@ int order = DEFAULT_ORDER;
  * printing each entire rank on a separate
  * line, finishing with the leaves.
  */
-node * queue = NULL;
+BtreeNode_t * queue = NULL;
 
 /* The user can toggle on and off the "verbose"
  * property, which causes the pointer addresses
@@ -52,7 +54,7 @@ node * queue = NULL;
  */
 bool verbose_output = false;
 
-node * insert_into_parent(node * root, node * left, int key, node * right);
+BtreeNode_t * insert_into_parent(BtreeNode_t * root, BtreeNode_t * left, int key, BtreeNode_t * right);
 
 /* Finds the appropriate place to
  * split a node that is too big into two.
@@ -69,9 +71,9 @@ int cut(int length) {
  * if the verbose flag is set.
  * Returns the leaf containing the given key.
  */
-node * find_leaf(node * root, int key, bool verbose) {
+BtreeNode_t * find_leaf(BtreeNode_t * root, int key, bool verbose) {
     int i = 0;
-    node * c = root;
+    BtreeNode_t * c = root;
     if (c == NULL) {
         if (verbose)
             printf("Empty tree.\n");
@@ -91,7 +93,7 @@ node * find_leaf(node * root, int key, bool verbose) {
         }
         if (verbose)
             printf("%d ->\n", i);
-        c = (node *) c->pointers[i];
+        c = (BtreeNode_t *) c->pointers[i];
     }
     if (verbose) {
         printf("Leaf [");
@@ -110,52 +112,36 @@ node * find_leaf(node * root, int key, bool verbose) {
  * @param verbose true to print info
  * @return 
  */
-record * find(node * root, int key, bool verbose) {
+BtreeRecord_t * BTreeFind(BtreeNode_t * root, int key, bool verbose) {
     int i = 0;
-    node * c = find_leaf(root, key, verbose);
+    BtreeNode_t * c = find_leaf(root, key, verbose);
     if (c == NULL) return NULL;
     for (i = 0; i < c->num_keys; i++)
         if (c->keys[i] == key) break;
     if (i == c->num_keys)
         return NULL;
     else
-        return (record *) c->pointers[i];
+        return (BtreeRecord_t *) c->pointers[i];
 }
 
 /* Creates a new record to hold the value
  * to which a key refers.
  */
-record * make_record(void *value) {
-    record * new_record = (record *) malloc(sizeof (record));
-    if (new_record == NULL) {
-        perror("Record creation.");
-        exit(EXIT_FAILURE);
-    } else {
-        new_record->value = value;
-    }
+BtreeRecord_t * make_record(void *value) {
+    BtreeRecord_t * new_record = (BtreeRecord_t *) allocate(sizeof (BtreeRecord_t), __FILE__, __LINE__);
+    new_record->value = value;
     return new_record;
 }
 
 /* Creates a new general node, which can be adapted
  * to serve as either a leaf or an internal node.
  */
-node * make_node(void) {
-    node * new_node;
-    new_node = malloc(sizeof (node));
-    if (new_node == NULL) {
-        perror("Node creation.");
-        exit(EXIT_FAILURE);
-    }
-    new_node->keys = malloc((order - 1) * sizeof (int));
-    if (new_node->keys == NULL) {
-        perror("New node keys array.");
-        exit(EXIT_FAILURE);
-    }
-    new_node->pointers = malloc(order * sizeof (void *));
-    if (new_node->pointers == NULL) {
-        perror("New node pointers array.");
-        exit(EXIT_FAILURE);
-    }
+BtreeNode_t * make_node(void) {
+    BtreeNode_t * new_node;
+    new_node = allocate(sizeof (BtreeNode_t), __FILE__, __LINE__);
+    new_node->keys = allocate((order - 1) * sizeof (int), __FILE__, __LINE__);    
+    new_node->pointers = allocate(order * sizeof (void *), __FILE__, __LINE__);
+    
     new_node->is_leaf = false;
     new_node->num_keys = 0;
     new_node->parent = NULL;
@@ -166,8 +152,8 @@ node * make_node(void) {
 /* Creates a new leaf by creating a node
  * and then adapting it appropriately.
  */
-node * make_leaf(void) {
-    node * leaf = make_node();
+BtreeNode_t * make_leaf(void) {
+    BtreeNode_t * leaf = make_node();
     leaf->is_leaf = true;
     return leaf;
 }
@@ -176,11 +162,9 @@ node * make_leaf(void) {
  * to find the index of the parent's pointer to 
  * the node to the left of the key to be inserted.
  */
-int get_left_index(node * parent, node * left) {
-
+int get_left_index(BtreeNode_t * parent, BtreeNode_t * left) {
     int left_index = 0;
-    while (left_index <= parent->num_keys &&
-            parent->pointers[left_index] != left)
+    while (left_index <= parent->num_keys && parent->pointers[left_index] != left)
         left_index++;
     return left_index;
 }
@@ -188,9 +172,8 @@ int get_left_index(node * parent, node * left) {
 /* First insertion:
  * start a new tree.
  */
-node * start_new_tree(int key, record * pointer) {
-
-    node * root = make_leaf();
+BtreeNode_t * start_new_tree(int key, BtreeRecord_t * pointer) {
+    BtreeNode_t * root = make_leaf();
     root->keys[0] = key;
     root->pointers[0] = pointer;
     root->pointers[order - 1] = NULL;
@@ -203,8 +186,7 @@ node * start_new_tree(int key, record * pointer) {
  * key into a leaf.
  * Returns the altered leaf.
  */
-node * insert_into_leaf(node * leaf, int key, record * pointer) {
-
+BtreeNode_t * insert_into_leaf(BtreeNode_t * leaf, int key, BtreeRecord_t * pointer) {
     int i, insertion_point;
 
     insertion_point = 0;
@@ -225,9 +207,8 @@ node * insert_into_leaf(node * leaf, int key, record * pointer) {
  * and inserts the appropriate key into
  * the new root.
  */
-node * insert_into_new_root(node * left, int key, node * right) {
-
-    node * root = make_node();
+BtreeNode_t * insert_into_new_root(BtreeNode_t * left, int key, BtreeNode_t * right) {
+    BtreeNode_t * root = make_node();
     root->keys[0] = key;
     root->pointers[0] = left;
     root->pointers[1] = right;
@@ -242,8 +223,8 @@ node * insert_into_new_root(node * left, int key, node * right) {
  * into a node into which these can fit
  * without violating the B+ tree properties.
  */
-node * insert_into_node(node * root, node * n,
-        int left_index, int key, node * right) {
+BtreeNode_t * insert_into_node(BtreeNode_t * root, BtreeNode_t * n,
+        int left_index, int key, BtreeNode_t * right) {
     int i;
 
     for (i = n->num_keys; i > left_index; i--) {
@@ -260,13 +241,13 @@ node * insert_into_node(node * root, node * n,
  * into a node, causing the node's size to exceed
  * the order, and causing the node to split into two.
  */
-node * insert_into_node_after_splitting(node * root, node * old_node, int left_index,
-        int key, node * right) {
+BtreeNode_t * insert_into_node_after_splitting(BtreeNode_t * root, BtreeNode_t * old_node, int left_index,
+        int key, BtreeNode_t * right) {
 
     int i, j, split, k_prime;
-    node * new_node, * child;
+    BtreeNode_t * new_node, * child;
     int * temp_keys;
-    node ** temp_pointers;
+    BtreeNode_t ** temp_pointers;
 
     /* First create a temporary set of keys and pointers
      * to hold everything in order, including
@@ -277,16 +258,8 @@ node * insert_into_node_after_splitting(node * root, node * old_node, int left_i
      * the other half to the new.
      */
 
-    temp_pointers = malloc((order + 1) * sizeof (node *));
-    if (temp_pointers == NULL) {
-        perror("Temporary pointers array for splitting nodes.");
-        exit(EXIT_FAILURE);
-    }
-    temp_keys = malloc(order * sizeof (int));
-    if (temp_keys == NULL) {
-        perror("Temporary keys array for splitting nodes.");
-        exit(EXIT_FAILURE);
-    }
+    temp_pointers = allocate((order + 1) * sizeof (BtreeNode_t *), __FILE__, __LINE__);
+    temp_keys = allocate(order * sizeof (int), __FILE__, __LINE__);
 
     for (i = 0, j = 0; i < old_node->num_keys + 1; i++, j++) {
         if (j == left_index + 1) j++;
@@ -340,10 +313,10 @@ node * insert_into_node_after_splitting(node * root, node * old_node, int left_i
 /* Inserts a new node (leaf or internal node) into the B+ tree.
  * Returns the root of the tree after insertion.
  */
-node * insert_into_parent(node * root, node * left, int key, node * right) {
+BtreeNode_t * insert_into_parent(BtreeNode_t * root, BtreeNode_t * left, int key, BtreeNode_t * right) {
 
     int left_index;
-    node * parent;
+    BtreeNode_t * parent;
 
     parent = left->parent;
 
@@ -381,26 +354,17 @@ node * insert_into_parent(node * root, node * left, int key, node * right) {
  * the tree's order, causing the leaf to be split
  * in half.
  */
-node * insert_into_leaf_after_splitting(node * root, node * leaf, int key, record * pointer) {
+BtreeNode_t * insert_into_leaf_after_splitting(BtreeNode_t * root, BtreeNode_t * leaf, int key, BtreeRecord_t * pointer) {
 
-    node * new_leaf;
+    BtreeNode_t * new_leaf;
     int * temp_keys;
     void ** temp_pointers;
     int insertion_index, split, new_key, i, j;
 
     new_leaf = make_leaf();
 
-    temp_keys = malloc(order * sizeof (int));
-    if (temp_keys == NULL) {
-        perror("Temporary keys array.");
-        exit(EXIT_FAILURE);
-    }
-
-    temp_pointers = malloc(order * sizeof (void *));
-    if (temp_pointers == NULL) {
-        perror("Temporary pointers array.");
-        exit(EXIT_FAILURE);
-    }
+    temp_keys = allocate(order * sizeof (int), __FILE__, __LINE__);
+    temp_pointers = allocate(order * sizeof (void *), __FILE__, __LINE__);
 
     insertion_index = 0;
     while (insertion_index < order - 1 && leaf->keys[insertion_index] < key)
@@ -460,16 +424,16 @@ node * insert_into_leaf_after_splitting(node * root, node * leaf, int key, recor
  * @param value the pointer to the object
  * @return the new root node
  */
-node * insert(node * root, int key, void *value) {
+BtreeNode_t * BtreeInsert(BtreeNode_t * root, int key, void *value) {
 
-    record * pointer;
-    node * leaf;
+    BtreeRecord_t * pointer;
+    BtreeNode_t * leaf;
 
     /* The current implementation ignores
      * duplicates.
      */
 
-    if (find(root, key, false) != NULL)
+    if (BTreeFind(root, key, false) != NULL)
         return root;
 
     /* Create a new record for the
@@ -510,8 +474,8 @@ node * insert(node * root, int key, void *value) {
 /* Helper function for printing the
  * tree out.  See print_tree.
  */
-void enqueue(node * new_node) {
-    node * c;
+void enqueue(BtreeNode_t * new_node) {
+    BtreeNode_t * c;
     if (queue == NULL) {
         queue = new_node;
         queue->next = NULL;
@@ -528,8 +492,8 @@ void enqueue(node * new_node) {
 /* Helper function for printing the
  * tree out.  See print_tree.
  */
-node * dequeue(void) {
-    node * n = queue;
+BtreeNode_t * dequeue(void) {
+    BtreeNode_t * n = queue;
     queue = queue->next;
     n->next = NULL;
     return n;
@@ -538,16 +502,15 @@ node * dequeue(void) {
 /* Utility function to give the length in edges
  * of the path from any node to the root.
  */
-int path_to_root(node * root, node * child) {
+int path_to_root(BtreeNode_t * root, BtreeNode_t * child) {
     int length = 0;
-    node * c = child;
+    BtreeNode_t * c = child;
     while (c != root) {
         c = c->parent;
         length++;
     }
     return length;
 }
-
 
 /**
  * Prints the B+ tree in the command
@@ -561,9 +524,8 @@ int path_to_root(node * root, node * child) {
  * 
  * @param root the root nodes
  */
-void print_tree(node * root) {
-
-    node * n = NULL;
+void BtreePrintTree(BtreeNode_t * root) {
+    BtreeNode_t * n = NULL;
     int i = 0;
     int rank = 0;
     int new_rank = 0;
@@ -612,9 +574,9 @@ void print_tree(node * root) {
  * @param root the root node
  * @return the height of the tree
  */
-int height(node * root) {
+int BTreeHeight(BtreeNode_t * root) {
     int h = 0;
-    node * c = root;
+    BtreeNode_t * c = root;
     while (!c->is_leaf) {
         c = c->pointers[0];
         h++;
@@ -622,13 +584,13 @@ int height(node * root) {
     return h;
 }
 
-void destroy_tree_nodes(node * root, void freeRecord(void *)) {
+void destroy_tree_nodes(BtreeNode_t * root, void freeRecord(void *)) {
     int i;
     if (root == NULL) return;
     if (root->is_leaf) {
         for (i = 0; i < root->num_keys; i++) {
             if (freeRecord != NULL) {
-                freeRecord(((record*) root->pointers[i])->value);
+                freeRecord(((BtreeRecord_t*) root->pointers[i])->value);
             }
             free(root->pointers[i]);
         }
@@ -643,13 +605,13 @@ void destroy_tree_nodes(node * root, void freeRecord(void *)) {
 }
 
 /**
- * Destroy the tree using the record specific function
+ * Free the tree using the record specific function
  * 
  * @param root the root node
  * @param freeRecord the record specific function
  * @return NULL;
  */
-node * destroy_tree(node * root, void freeRecord(void *)) {
+BtreeNode_t * BTreeFree(BtreeNode_t * root, void freeRecord(void *)) {
     destroy_tree_nodes(root, freeRecord);
     return NULL;
 }

@@ -108,15 +108,15 @@ void setRank(void *self, char *rank) {
  * @param count the number of elements in the leneage array
  * @param taxDB the NCBI Taxonomy database in a bTree index
  */
-void getLineage(void *self, int **lineage, int *count, node *taxDB) {
+void getLineage(void *self, int **lineage, int *count, BtreeNode_t *taxDB) {
     _CHECK_SELF_P(self);
-    record *rec;
+    BtreeRecord_t *rec;
 
     *lineage = (int *) realloc(*lineage, sizeof (int) * (*count + 1));
     (*lineage)[*count] = ((taxonomy_l) self)->taxId;
     (*count)++;
     if (((taxonomy_l) self)->parentTaxId != 1) {
-        if ((rec = find(taxDB, ((taxonomy_l) self)->parentTaxId, false)) != NULL) {
+        if ((rec = BTreeFind(taxDB, ((taxonomy_l) self)->parentTaxId, false)) != NULL) {
             getLineage(rec->value, lineage, count, taxDB);
         }
     }
@@ -204,11 +204,11 @@ taxonomy_l ReadTaxonomy(FILE *nodes, FILE *names) {
  * @param verbose 1 to print a verbose info
  * @return the NCBI Taxonomy db in a Btree index
  */
-node *TaxonomyDBIndex(char *dir, int verbose) {
+BtreeNode_t *TaxonomyDBIndex(char *dir, int verbose) {
     struct timespec stop, mid;
     char *tmp;
     FILE *nodes, *names;
-    node *root = NULL;
+    BtreeNode_t *root = NULL;
     taxonomy_l tax;
 
     clock_gettime(CLOCK_MONOTONIC, &mid);
@@ -224,7 +224,7 @@ node *TaxonomyDBIndex(char *dir, int verbose) {
     names = checkPointerError(fopen(tmp, "r"), "Can't open the names file", __FILE__, __LINE__, -1);
 
     while ((tax = ReadTaxonomy(nodes, names)) != NULL) {
-        root = insert(root, tax->taxId, tax);
+        root = BtreeInsert(root, tax->taxId, tax);
     }
 
     fclose(nodes);
@@ -246,10 +246,10 @@ node *TaxonomyDBIndex(char *dir, int verbose) {
  * @param verbose 1 to print a verbose info
  * @return 
  */
-node *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose) {
+BtreeNode_t *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose) {
     struct timespec start, stop;
     gzFile gFile;
-    node *root = NULL;
+    BtreeNode_t *root = NULL;
     char *buffer = NULL;
     int gi;
     int *taxid;
@@ -264,7 +264,7 @@ node *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose) {
         gzgets(gFile, buffer, 100);
         taxid = (int *) malloc(sizeof (int));
         sscanf(buffer, "%d\t%d\n", &gi, taxid);
-        root = insert(root, gi, taxid);
+        root = BtreeInsert(root, gi, taxid);
         if (verbose && count % 10000 == 0) {
             clock_gettime(CLOCK_MONOTONIC, &stop);
             printf("\tReading GIs: Total: %10d\t\tTime: %.2f   \r", count, timespecDiffSec(&stop, &start));
