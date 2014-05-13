@@ -555,6 +555,19 @@ fasta_l ReadFasta(FILE *fp, int excludeSeq) {
 }
 
 /**
+ * Read a fasta entry from the file starting from the offset
+ * 
+ * @param fp the input file
+ * @param offset the offset to start reading
+ * @param excludeSeq 1 if you want to exclude the sequence and read only the header 
+ * @return the fasta entry
+ */
+fasta_l ReadFastaFromOffset(FILE *fp, off_t offset, int excludeSeq) {
+    fseeko(fp, offset, SEEK_SET);
+    return ReadFasta(fp, excludeSeq);
+}
+
+/**
  * Read a fasta entry from the file
  * 
  * @param fp the input file
