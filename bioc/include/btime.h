@@ -11,10 +11,23 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-    extern int64_t timespecDiff(struct timespec *timeA_p, struct timespec *timeB_p);
+    /**
+     * Calculate the difference in time in nanoseconds
+     * 
+     * @param stop last time 
+     * @param start first time
+     * @return the time in nanoseconds
+     */
+    extern float timespecDiff(struct timespec *stop, struct timespec *start);
     
-    extern int64_t timespecDiffSec(struct timespec *timeA_p, struct timespec *timeB_p);
+    /**
+     * Calculate the difference in time in seconds
+     * 
+     * @param stop last time 
+     * @param start first time
+     * @return the time in seconds
+     */
+    extern float timespecDiffSec(struct timespec *stop, struct timespec *start);
 
 #ifdef	__cplusplus
 }

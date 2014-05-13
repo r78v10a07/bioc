@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
     /**
-     * Split a string into a array of string using the delimiter
+     * Split a string into an array of string using the delimiter
      * 
      * @param dest the destination pointer
      * @param src the source pointer
@@ -21,14 +21,6 @@ extern "C" {
      * @return a array with the splited strings
      */
     extern size_t splitString(char ***dest, char *src, char *delimiter);
-
-    /**
-     * Free an array of strings
-     * 
-     * @param str the pointer to be free
-     * @param index the number of strings
-     */
-    extern void freeString(char **str, int index);
 
     /**
      * Return 0 if the string haystack ends with the string needle

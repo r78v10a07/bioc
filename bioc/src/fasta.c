@@ -113,7 +113,7 @@ void getGi(void *self, int *gi) {
             break;
         }
     }
-    freeString(ids, ids_number);
+    freeArrayofPointers((void **) ids, ids_number);
 }
 
 /**
@@ -199,11 +199,11 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
         }
         outf = CreateFasta();
         outf->setHeader(outf, header);
-        tmp = allocate(sizeof (char) * (length + 1), __FILE__, __LINE__);
-        memset(tmp, 0, sizeof (char) * (length + 1));
+        tmp = allocate(sizeof (char) * (size + 1), __FILE__, __LINE__);
+        memset(tmp, 0, sizeof (char) * (size + 1));
         strncpy(tmp, (((fasta_l) self)->seq + start), size);
-        outf->setSeq(outf, tmp);
-        free(tmp);
+        outf->seq = tmp;
+        outf->len = size;
         outf->toFile(outf, out, lineLength);
         outf->free(outf);
     }
@@ -251,7 +251,7 @@ void printOverlapSegments(void * self, FILE *out, int length, int offset, int li
         if (i + length >= ((fasta_l) self)->len) break;
     }
 
-    freeString(ids, ids_number);
+    freeArrayofPointers((void **) ids, ids_number);
     free(header);
 }
 
@@ -292,7 +292,7 @@ void *thread_function(void *arg) {
         if (i + parms->length >= ((fasta_l) self)->len) break;
     }
 
-    freeString(ids, ids_number);
+    freeArrayofPointers((void **) ids, ids_number);
     free(header);
     fclose(fd);
     return NULL;
@@ -340,7 +340,7 @@ void *thread_functionInMem(void *arg) {
 
     parms->res = res;
     parms->resNumber = resNumber;
-    freeString(ids, ids_number);
+    freeArrayofPointers((void **) ids, ids_number);
     free(header);
     return NULL;
 }
@@ -470,46 +470,73 @@ fasta_l CreateFasta() {
 }
 
 /**
- * Read a fasta entry from the file
+ * Read the fasta entry using a buffer of characters
  * 
  * @param fp the input file
- * @param excludeSeq 1 if you want to exclude the sequence 
+ * @param bufferSize the number of characters in the buffer
+ * @param excludeSeq 1 if you want to exclude the sequence and read only the header 
  * @return the fasta entry
  */
-fasta_l ReadFasta(FILE *fp, int excludeSeq) {
+fasta_l ReadFastaBuffer(FILE *fp, int bufferSize, int excludeSeq) {
     fasta_l self = NULL;
 
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-    off_t pos = 0;
+    size_t buf_size, seq_size;
+    char *buffer, *seq, *line, *str;
+    off_t pos;
+    int numLines, readTotal, out;
 
-    while ((read = getline(&line, &len, fp)) != -1) {
-        if (strncmp(line, ">", 1) == 0) {
-            if (self == NULL) {
-                self = CreateFasta();
-                self->header = strndup(line + 1, strlen(line) - 2);
-            } else {
-                fseeko(fp, pos, SEEK_SET);
-                break;
+    seq_size = buf_size = sizeof (char) * bufferSize;
+    buffer = allocate(sizeof (char) * (bufferSize + 1), __FILE__, __LINE__);
+    if (!excludeSeq) {
+        seq = allocate(sizeof (char) * (bufferSize + 1), __FILE__, __LINE__);
+        seq[0] = '\0';
+    }else{
+        seq = NULL;
+    }
+    pos = ftello(fp);
+    readTotal = out = 0;
+    numLines = 0;
+    while (!feof(fp)) {
+        memset(buffer, 0, buf_size);
+        if (fread(buffer, buf_size, 1, fp) == 1) buffer[bufferSize] = '\0';
+        str = buffer;
+        while (1) {
+            line = strchr(str, '\n');
+            if (line) *line = '\0';
+            if (*str != '\0' && *str != '\n') {
+                if (*str == '>') {
+                    if (self == NULL) {
+                        readTotal += strlen(str);
+                        self = CreateFasta();
+                        self->header = strndup(str + 1, strlen(str) - 1);
+                    } else {
+                        if (!excludeSeq) self->setSeq(self, seq);
+                        pos = pos + sizeof (char) * (readTotal + numLines);
+                        fseeko(fp, pos, SEEK_SET);
+                        break;
+                    }
+                } else {
+                    checkPointerError(self, "The fasta file does not start with the header (>)", __FILE__, __LINE__, -1);
+                    readTotal += strlen(str);
+                    if (!excludeSeq) {
+                        if (readTotal >= seq_size) {
+                            seq_size += seq_size;
+                            seq = reallocate(seq, seq_size, __FILE__, __LINE__);
+                        }
+                        strcat(seq, str);
+                    }
+                }
             }
-        } else if (excludeSeq != 1) {
-            checkPointerError(self, "The fasta file does not start with the header (>)", __FILE__, __LINE__, -1);
-            if (self->seq == NULL) {
-                self->seq = strndup(line, strlen(line) - 1);
-            } else {
-                self->seq = reallocate(self->seq, strlen(self->seq) + strlen(line) + 1, __FILE__, __LINE__);
-                strncat(self->seq, line, strlen(line) - 1);
-            }
+            if (!line) break;
+            str = line + 1;
+            numLines++;
         }
-        pos = ftello(fp);
+        if (*str == '>') break;
     }
+    if (feof(fp) && self && !self->seq && !excludeSeq) self->setSeq(self, seq);
 
-
-    if (self != NULL && self->seq != NULL) {
-        self->len = self->length(self);
-    }
-    if (line) free(line);
+    if (!excludeSeq) free(seq);
+    free(buffer);
     return self;
 }
 
@@ -517,7 +544,21 @@ fasta_l ReadFasta(FILE *fp, int excludeSeq) {
  * Read a fasta entry from the file
  * 
  * @param fp the input file
- * @param excludeSeq 1 if you want to exclude the sequence 
+ * @param excludeSeq 1 if you want to exclude the sequence and read only the header 
+ * @return the fasta entry
+ */
+fasta_l ReadFasta(FILE *fp, int excludeSeq) {
+    if (!excludeSeq)
+        return ReadFastaBuffer(fp, 7000000, excludeSeq);
+    else
+        return ReadFastaBuffer(fp, 7000, excludeSeq);
+}
+
+/**
+ * Read a fasta entry from the file
+ * 
+ * @param fp the input file
+ * @param excludeSeq 1 if you want to exclude the sequence and read only the header 
  * @return the fasta entry
  */
 fasta_l ReadFastaGzip(gzFile fp, int excludeSeq) {
@@ -557,7 +598,7 @@ fasta_l ReadFastaGzip(gzFile fp, int excludeSeq) {
 }
 
 /**
- * Create the fasta index file which include the gi and the offset position
+ * Create a fasta binary index file which include the gi and the offset position
  * 
  * @param fd the input fasta file
  * @param fo the output binary file
@@ -594,7 +635,7 @@ int CreateFastaIndexToFile(FILE *fd, FILE *fo, int verbose) {
 }
 
 /**
- * Create the fasta index file which include the gi and the offset position
+ * Create a Btree index which include the gi and the offset position
  * 
  * @param fd the input fasta file
  * @param verbose 1 to print info
@@ -661,7 +702,7 @@ int CreateFastaIndexGzipToFile(gzFile fd, FILE *fo, int verbose) {
 }
 
 /**
- * Create the fasta index file which include the gi and the offset position
+ * Create a Btree index which include the gi and the offset position
  * 
  * @param fd the input fasta file
  * @param verbose 1 to print info
@@ -732,7 +773,7 @@ node *CreateBtreeFromIndex(FILE *fi, int verbose) {
     }
     clock_gettime(CLOCK_MONOTONIC, &stop);
     if (verbose)
-        printf("\n\tThere are %d GIs into the B+Tree. Elapsed time: %lu sec\n\n", count, timespecDiffSec(&stop, &start));
+        printf("\n\tThere are %d GIs into the B+Tree. Elapsed time: %.2f sec\n\n", count, timespecDiffSec(&stop, &start));
     fflush(NULL);
     return root;
 }

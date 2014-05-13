@@ -166,25 +166,25 @@ taxonomy_l ReadTaxonomy(FILE *nodes, FILE *names) {
     if (getline(&line, &len, nodes) != -1) {
         self = CreateTaxonomy();
         ids_number = splitString(&ids, line, "\t|");
-        if (ids_number < 3){
-            fprintf(stderr,"LINE: %s",line);
-            fprintf(stderr,"ids number: %d\n",ids_number);
+        if (ids_number < 3) {
+            fprintf(stderr, "LINE: %s", line);
+            fprintf(stderr, "ids number: %d\n", ids_number);
             checkPointerError(NULL, "Can't parse the nodes.dmp file", __FILE__, __LINE__, -1);
         }
         self->setTaxId(self, atoi(ids[0]));
         self->setParentTaxId(self, atoi(ids[1]));
         self->setRank(self, ids[2]);
 
-        freeString(ids, ids_number);
+        freeArrayofPointers((void **) ids, ids_number);
         while ((read = getline(&line, &len, names)) != -1) {
             i = atoi(line);
             if (i == self->taxId) {
                 if (strstr(line, "scientific name") != NULL) {
                     ids_number = splitString(&ids, line, "\t|");
                     self->setName(self, ids[1]);
-                    freeString(ids, ids_number);
+                    freeArrayofPointers((void **) ids, ids_number);
                 }
-            }            
+            }
             if (i > self->taxId) {
                 fseeko(names, pos, SEEK_SET);
                 break;
@@ -225,14 +225,14 @@ node *TaxonomyDBIndex(char *dir, int verbose) {
 
     while ((tax = ReadTaxonomy(nodes, names)) != NULL) {
         root = insert(root, tax->taxId, tax);
-    }   
+    }
 
     fclose(nodes);
     fclose(names);
     free(tmp);
     clock_gettime(CLOCK_MONOTONIC, &stop);
     if (verbose) {
-        printf("%lu sec\n", timespecDiffSec(&stop, &mid));
+        printf("%.2f sec\n", timespecDiffSec(&stop, &mid));
         fflush(stdout);
     }
     return root;
@@ -267,7 +267,7 @@ node *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose) {
         root = insert(root, gi, taxid);
         if (verbose && count % 10000 == 0) {
             clock_gettime(CLOCK_MONOTONIC, &stop);
-            printf("\tReading GIs: Total: %10d\t\tTime: %lu   \r", count, timespecDiffSec(&stop, &start));
+            printf("\tReading GIs: Total: %10d\t\tTime: %.2f   \r", count, timespecDiffSec(&stop, &start));
         }
         count++;
     }
@@ -275,7 +275,7 @@ node *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose) {
     if (buffer) free(buffer);
     gzclose(gFile);
     clock_gettime(CLOCK_MONOTONIC, &stop);
-    if (verbose) printf("\n\tThere are %d GIs into the B+Tree. Elapsed time: %lu sec\n\n", count, timespecDiffSec(&stop, &start));
+    if (verbose) printf("\n\tThere are %d GIs into the B+Tree. Elapsed time: %.2f sec\n\n", count, timespecDiffSec(&stop, &start));
     fflush(NULL);
     return root;
 }

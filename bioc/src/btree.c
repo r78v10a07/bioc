@@ -4,6 +4,23 @@
  *
  * Created on May 7, 2014, 9:55 AM
  */
+
+/**
+ *    This code was taken and modified from:
+ * 
+ *    http://www.amittai.com/prose/bplustree.html
+ * 
+ *    Author:  Amittai Aviram 
+ *    http://www.amittai.com
+ *    amittai.aviram@gmail.edu or afa13@columbia.edu
+ *    Senior Software Engineer
+ *    MathWorks, Inc.
+ *    3 Apple Hill Drive
+ *    Natick, MA 01760 
+ *  Original Date:  26 June 2010
+ *  Last modified: 15 April 2014
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -85,8 +102,13 @@ node * find_leaf(node * root, int key, bool verbose) {
     return c;
 }
 
-/* Finds and returns the record to which
- * a key refers.
+/**
+ * Finds and returns the record to which a key refers.
+ * 
+ * @param root the root node
+ * @param key the key of the object to find
+ * @param verbose true to print info
+ * @return 
  */
 record * find(node * root, int key, bool verbose) {
     int i = 0;
@@ -426,11 +448,17 @@ node * insert_into_leaf_after_splitting(node * root, node * leaf, int key, recor
     return insert_into_parent(root, leaf, new_key, new_leaf);
 }
 
-/* Master insertion function.
+/**
+ * Master insertion function.
  * Inserts a key and an associated value into
  * the B+ tree, causing the tree to be adjusted
  * however necessary to maintain the B+ tree
  * properties.
+ * 
+ * @param root the root nodes
+ * @param key the key to be used to identify the object
+ * @param value the pointer to the object
+ * @return the new root node
  */
 node * insert(node * root, int key, void *value) {
 
@@ -520,7 +548,9 @@ int path_to_root(node * root, node * child) {
     return length;
 }
 
-/* Prints the B+ tree in the command
+
+/**
+ * Prints the B+ tree in the command
  * line in level (rank) order, with the 
  * keys in each node and the '|' symbol
  * to separate nodes.
@@ -528,6 +558,8 @@ int path_to_root(node * root, node * child) {
  * the values of the pointers corresponding
  * to the keys also appear next to their respective
  * keys, in hexadecimal notation.
+ * 
+ * @param root the root nodes
  */
 void print_tree(node * root) {
 
@@ -572,9 +604,13 @@ void print_tree(node * root) {
     printf("\n");
 }
 
-/* Utility function to give the height
+/**
+ * Utility function to give the height
  * of the tree, which length in number of edges
  * of the path from the root to any leaf.
+ * 
+ * @param root the root node
+ * @return the height of the tree
  */
 int height(node * root) {
     int h = 0;
@@ -606,6 +642,13 @@ void destroy_tree_nodes(node * root, void freeRecord(void *)) {
     free(root);
 }
 
+/**
+ * Destroy the tree using the record specific function
+ * 
+ * @param root the root node
+ * @param freeRecord the record specific function
+ * @return NULL;
+ */
 node * destroy_tree(node * root, void freeRecord(void *)) {
     destroy_tree_nodes(root, freeRecord);
     return NULL;
