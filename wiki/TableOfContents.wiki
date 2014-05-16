@@ -3,6 +3,7 @@
     * [bmemory Memory]
     * [btime Time]
     * [bstring String]
-    * [btree Btree]
+    * [btree Btree with Integer key]
+    * [btreeString Btree with String key]
     * [fasta Fasta]
     * [taxonomy Taxonomy]
