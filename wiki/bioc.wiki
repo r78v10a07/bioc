@@ -9,8 +9,8 @@ Basic modules:
   * [bmemory Memory]
   * [btime Time]
   * [bstring String]
-  * [btree Btree with an Integer as key]
-  * [btreeString Btree with a String as key]
+  * [btree Integer key based Btree]
+  * [btreeString String key based Btree]
 
 Bioinformatics modules
 
