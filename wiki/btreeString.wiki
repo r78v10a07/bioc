@@ -2,7 +2,7 @@
 
 This code was taken and modified from [http://www.amittai.com/prose/bplustree.html here]. Original code wrote by [http://www.amittai.com Amittai Aviram].
 
-[https://bioc.googlecode.com/svn/trunk/bioc/include/btree.h btree.h]  [https://bioc.googlecode.com/svn/trunk/bioc/src/btree.c btree.c] 
+[https://bioc.googlecode.com/svn/trunk/bioc/include/btreestring.h btreestring.h]  [https://bioc.googlecode.com/svn/trunk/bioc/src/btreestring.c btreestring.c] 
 
 {{{
 #include <stdio.h>
