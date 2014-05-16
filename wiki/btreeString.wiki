@@ -1,1 +1,13 @@
 = String key based Btree =
+
+This code was taken and modified from [http://www.amittai.com/prose/bplustree.html here]. Original code wrote by [http://www.amittai.com Amittai Aviram].
+
+[https://bioc.googlecode.com/svn/trunk/bioc/include/btree.h btree.h]  [https://bioc.googlecode.com/svn/trunk/bioc/src/btree.c btree.c] 
+
+{{{
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "btree.h"
+#include "btreestring.h"
+}}}
