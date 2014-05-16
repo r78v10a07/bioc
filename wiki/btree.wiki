@@ -1,4 +1,4 @@
-= Introduction =
+= Integer key based Btree =
 
 This code was taken and modified from [http://www.amittai.com/prose/bplustree.html here]. Original code wrote by [http://www.amittai.com Amittai Aviram].
 
