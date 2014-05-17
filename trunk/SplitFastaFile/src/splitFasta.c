@@ -52,11 +52,13 @@ int main(int argc, char** argv) {
     int i, next_option, verbose;
     const char* const short_options = "vhi:o:l:f:s:p:t:mn";
     char *input, *output, *tmp;
-    int length, offset, size, threads, split, count, countWords, mem, name;
+    int length, offset, size, threads, count, mem, name;
     FILE *fo;
     FILE *fd;
     char **ids = NULL;
     int ids_number, gi, fromTo;
+    long long int countWords;
+    long long int split;
 
     clock_gettime(CLOCK_MONOTONIC, &start);
     program_name = argv[0];
@@ -141,6 +143,7 @@ int main(int argc, char** argv) {
     } else {
         tmp = allocate(sizeof (char) * (strlen(output) + 100), __FILE__, __LINE__);
         sprintf(tmp, "%s_%d.fna", output, count);
+        if (verbose) printf("Creating a new file: %s\n", tmp);
         fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
     }
     while ((fasta = ReadFasta(fd, 0)) != NULL) {
@@ -148,15 +151,16 @@ int main(int argc, char** argv) {
         if (name == 0) {
             if (split != 0) {
                 countWords += fasta->length(fasta);
-                if (countWords >= (split * 1024 * 1024 * 1024)) {
+                if (countWords >= split * 1024 * 1024 * 1024) {
                     count++;
                     countWords = fasta->length(fasta);
                     fclose(fo);
                     sprintf(tmp, "%s_%d.fna", output, count);
+                    if (verbose) printf("Creating a new file: %s\n", tmp);
                     fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
                 }
             }
-            fasta->splitInSegments(fasta, fo, length, offset, size, threads, mem);
+            fasta->splitInSegments(fasta, fo, length, offset, size, threads, mem);            
         } else {
             gi = fromTo = -1;
             ids_number = splitString(&ids, ((fasta_l) fasta)->header, "|");
