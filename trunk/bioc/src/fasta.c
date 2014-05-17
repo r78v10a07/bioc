@@ -285,7 +285,6 @@ void splitInSegments(void * self, FILE *out, int length, int offset, int lineLen
     numPerThread = reads / threads_number;
 
     for (i = 0; i < threads_number; i++) {
-        printf("Creating thread: %d\n", i);
         fflush(NULL);
         if (inMem == 0) {
             tFiles[i] = allocate(sizeof (char *) * 150, __FILE__, __LINE__);
@@ -324,7 +323,6 @@ void splitInSegments(void * self, FILE *out, int length, int offset, int lineLen
     }
 
     for (i = 0; i < threads_number; i++) {
-        printf("Waiting for thread: %d\n", i);
         fflush(NULL);
         thread_join_res = pthread_join(threads[i], NULL);
         if (thread_join_res != 0) {
