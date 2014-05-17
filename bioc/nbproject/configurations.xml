@@ -9,6 +9,7 @@
       <itemPath>include/bstring.h</itemPath>
       <itemPath>include/btime.h</itemPath>
       <itemPath>include/btree.h</itemPath>
+      <itemPath>include/btreestring.h</itemPath>
       <itemPath>include/fasta.h</itemPath>
       <itemPath>include/taxonomy.h</itemPath>
     </logicalFolder>
@@ -24,6 +25,7 @@
       <itemPath>src/bstring.c</itemPath>
       <itemPath>src/btime.c</itemPath>
       <itemPath>src/btree.c</itemPath>
+      <itemPath>src/btreestring.c</itemPath>
       <itemPath>src/fasta.c</itemPath>
       <itemPath>src/taxonomy.c</itemPath>
     </logicalFolder>
@@ -113,6 +115,8 @@
       </item>
       <item path="include/btree.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="include/btreestring.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/fasta.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/taxonomy.h" ex="false" tool="3" flavor2="0">
@@ -126,6 +130,8 @@
       <item path="src/btime.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/btree.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/btreestring.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/fasta.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -199,6 +205,8 @@
       </item>
       <item path="include/btree.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="include/btreestring.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="include/fasta.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/taxonomy.h" ex="false" tool="3" flavor2="0">
@@ -212,6 +220,8 @@
       <item path="src/btime.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/btree.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/btreestring.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/fasta.c" ex="false" tool="0" flavor2="0">
       </item>

@@ -40,6 +40,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/bstring.o \
 	${OBJECTDIR}/src/btime.o \
 	${OBJECTDIR}/src/btree.o \
+	${OBJECTDIR}/src/btreestring.o \
 	${OBJECTDIR}/src/fasta.o \
 	${OBJECTDIR}/src/taxonomy.o
 
@@ -102,6 +103,11 @@ ${OBJECTDIR}/src/btree.o: src/btree.c
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/btree.o src/btree.c
+
+${OBJECTDIR}/src/btreestring.o: src/btreestring.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Iinclude -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/btreestring.o src/btreestring.c
 
 ${OBJECTDIR}/src/fasta.o: src/fasta.c 
 	${MKDIR} -p ${OBJECTDIR}/src
@@ -212,6 +218,19 @@ ${OBJECTDIR}/src/btree_nomain.o: ${OBJECTDIR}/src/btree.o src/btree.c
 	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/btree_nomain.o src/btree.c;\
 	else  \
 	    ${CP} ${OBJECTDIR}/src/btree.o ${OBJECTDIR}/src/btree_nomain.o;\
+	fi
+
+${OBJECTDIR}/src/btreestring_nomain.o: ${OBJECTDIR}/src/btreestring.o src/btreestring.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/src/btreestring.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.c) -g -Iinclude -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/btreestring_nomain.o src/btreestring.c;\
+	else  \
+	    ${CP} ${OBJECTDIR}/src/btreestring.o ${OBJECTDIR}/src/btreestring_nomain.o;\
 	fi
 
 ${OBJECTDIR}/src/fasta_nomain.o: ${OBJECTDIR}/src/fasta.o src/fasta.c 
