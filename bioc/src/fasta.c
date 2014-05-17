@@ -159,7 +159,7 @@ void getSegment(void **outvoid, void * self, char *header, int start, int length
     int size;
     char *tmp;
 
-    outvoid = NULL;
+    *outvoid = NULL;
     if (start < ((fasta_l) self)->len) {
         if (start + length < ((fasta_l) self)->len) {
             size = length;
@@ -212,41 +212,18 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
 void *pthreadSplitInSegments(void *arg) {
     thread_param_t *parms = ((thread_param_t*) arg);
     void * self = parms->self;
-    int i, index;
-    char **ids;
-    int ids_number;
+    int i, gi;
     size_t size = (strlen(((fasta_l) self)->header)) + 1000;
     char *header = allocate(sizeof (char) * size, __FILE__, __LINE__);
     FILE *fd = checkPointerError(fopen(parms->out, "w"), "Can't open temporal file", __FILE__, __LINE__, -1);
 
-    memset(header, 0, size);
-    ids_number = splitString(&ids, ((fasta_l) self)->header, "|");
-    if (ids_number % 2 == 0) {
-        strcpy(header, ((fasta_l) self)->header);
-        strcat(header, "|from-to|");
-    } else {
-        for (i = 0; i < ids_number - 1; i++) {
-            strcat(header, ids[i]);
-            strcat(header, "|");
-        }
-        strcat(header, "from-to|");
-    }
-
-    index = strlen(header);
-
-    index = strlen(header);
     for (i = parms->start; i < parms->end; i += parms->offset) {
-        header[index] = '\0';
-        if (ids_number % 2 == 0) {
-            sprintf(header, "%s%d-%d", header, i, i + parms->length);
-        } else {
-            sprintf(header, "%s%d-%d|%s", header, i, i + parms->length, ids[ids_number - 1]);
-        }
+        ((fasta_l) self)->getGi(self, &gi);
+        sprintf(header, "%d-%d", gi, i);
         printSegment(self, fd, header, i, parms->length, parms->lineLength);
         if (i + parms->length >= ((fasta_l) self)->len) break;
     }
 
-    freeArrayofPointers((void **) ids, ids_number);
     free(header);
     fclose(fd);
     return NULL;
@@ -255,46 +232,25 @@ void *pthreadSplitInSegments(void *arg) {
 void *pthreadSplitInSegmentsInMem(void *arg) {
     thread_param_t *parms = ((thread_param_t*) arg);
     void * self = parms->self;
-    int i, index;
-    char **ids;
-    int ids_number;
+    int i, gi;
     size_t size = (strlen(((fasta_l) self)->header)) + 1000;
     char *header = allocate(sizeof (char) * size, __FILE__, __LINE__);
     void **res = NULL;
     int resNumber = 0;
-    fasta_l fasta = NULL;
 
     memset(header, 0, size);
-    strcpy(header, ((fasta_l) self)->header);
-    strcat(header, "|from-to|");
-
-    ids_number = splitString(&ids, ((fasta_l) self)->header, "|");
-    if (ids_number % 2 == 0) {
-        strcpy(header, ((fasta_l) self)->header);
-        strcat(header, "|from-to|");
-    } else {
-        for (i = 0; i < ids_number - 1; i++) {
-            strcat(header, ids[i]);
-            strcat(header, "|");
-        }
-        strcat(header, "from-to|");
-    }
-
-    index = strlen(header);
     for (i = parms->start; i < parms->end; i += parms->offset) {
-        header[index] = '\0';
-        sprintf(header, "%s%d-%d", header, i, i + parms->length);
-        getSegment((void **) &fasta, self, header, i, parms->length);
+        ((fasta_l) self)->getGi(self, &gi);
+        sprintf(header, "%d-%d", gi, i);
         res = realloc(res, sizeof (void **) * (resNumber + 1));
         checkPointerError(res, "Can't allocate memory", __FILE__, __LINE__, -1);
-        res[resNumber] = fasta;
+        getSegment((void **) &(res[resNumber]), self, header, i, parms->length);
         resNumber++;
         if (i + parms->length >= ((fasta_l) self)->len) break;
     }
 
     parms->res = res;
     parms->resNumber = resNumber;
-    freeArrayofPointers((void **) ids, ids_number);
     free(header);
     return NULL;
 }
@@ -442,7 +398,7 @@ fasta_l ReadFastaBuffer(FILE *fp, int bufferSize, int excludeSeq) {
     if (!excludeSeq) {
         seq = allocate(sizeof (char) * (bufferSize + 1), __FILE__, __LINE__);
         seq[0] = '\0';
-    }else{
+    } else {
         seq = NULL;
     }
     pos = ftello(fp);
