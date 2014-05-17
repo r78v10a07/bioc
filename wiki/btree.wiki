@@ -68,7 +68,7 @@ Usage:
     }
 }}}
 
-Free the Btree==
+==Free the Btree==
 
 {{{
     /**
