@@ -48,7 +48,7 @@ void print_usage(FILE *stream, int exit_code) {
 int main(int argc, char** argv) {
     fasta_l fasta;
 
-    struct timespec start, stop;
+    struct timespec start, stop, mid;
     int i, next_option, verbose;
     const char* const short_options = "vhi:o:l:f:s:p:t:mn";
     char *input, *output, *tmp;
@@ -146,8 +146,10 @@ int main(int argc, char** argv) {
         if (verbose) printf("Creating a new file: %s\n", tmp);
         fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
     }
+    clock_gettime(CLOCK_MONOTONIC, &mid);
     while ((fasta = ReadFasta(fd, 0)) != NULL) {
-        if (verbose) printf("Read sequence of size: %d\n", fasta->len);
+        clock_gettime(CLOCK_MONOTONIC, &stop);
+        if (verbose) printf("Read sequence of size: %8d in %4.2f sec\n", fasta->len, timespecDiffSec(&stop, &mid));
         if (name == 0) {
             if (split != 0) {
                 countWords += fasta->length(fasta);
@@ -183,6 +185,7 @@ int main(int argc, char** argv) {
             freeArrayofPointers((void **)ids, ids_number);
         }
         fasta->free(fasta);
+        clock_gettime(CLOCK_MONOTONIC, &mid);
     }
 
     fclose(fd);
