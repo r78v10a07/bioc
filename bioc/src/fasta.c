@@ -219,7 +219,7 @@ void *pthreadSplitInSegments(void *arg) {
 
     for (i = parms->start; i < parms->end; i += parms->offset) {
         ((fasta_l) self)->getGi(self, &gi);
-        sprintf(header, "%d-%d", gi, i);
+        sprintf(header, "%d|%d-%d", gi, i, i + parms->length);
         printSegment(self, fd, header, i, parms->length, parms->lineLength);
         if (i + parms->length >= ((fasta_l) self)->len) break;
     }
@@ -241,7 +241,7 @@ void *pthreadSplitInSegmentsInMem(void *arg) {
     memset(header, 0, size);
     for (i = parms->start; i < parms->end; i += parms->offset) {
         ((fasta_l) self)->getGi(self, &gi);
-        sprintf(header, "%d-%d", gi, i);
+        sprintf(header, "%d|%d-%d", gi, i, i + parms->length);
         res = realloc(res, sizeof (void **) * (resNumber + 1));
         checkPointerError(res, "Can't allocate memory", __FILE__, __LINE__, -1);
         getSegment((void **) &(res[resNumber]), self, header, i, parms->length);
