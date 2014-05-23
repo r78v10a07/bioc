@@ -132,14 +132,14 @@ void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int li
         } else {
             for (j = 0; j < tp[i].resNumber; j++) {
                 if (strstr(((fasta_l) tp[i].res[j])->seq, "NNNNN") == NULL) {
-                    ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength
-                            ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
+                    ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
+                    ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
                 }
             }
             free(tp[i].res);
         }
     }
     if (tp) free(tp);
-        if (tFiles)free(tFiles);
-            if (threads)free(threads);
-            }
+    if (tFiles)free(tFiles);
+    if (threads)free(threads);
+}
