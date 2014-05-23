@@ -131,13 +131,15 @@ void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int li
             if (tFiles[i]) free(tFiles[i]);
         } else {
             for (j = 0; j < tp[i].resNumber; j++) {
-                if (tax) {
-                    sscanf(((fasta_l) tp[i].res[j])->header, "%d|%d", &gi, &from);
-                    ((fasta_l) tp[i].res[j])->header = reallocate(((fasta_l) tp[i].res[j])->header, sizeof (char) * (strlen(((fasta_l) tp[i].res[j])->header) + 100), __FILE__, __LINE__);
-                    sprintf(((fasta_l) tp[i].res[j])->header, "%d-%d;%d", gi, from, taxId);
+                if (strstr(((fasta_l) tp[i].res[j])->seq, "NNNNN") == NULL) {
+                    if (tax) {
+                        sscanf(((fasta_l) tp[i].res[j])->header, "%d|%d", &gi, &from);
+                        ((fasta_l) tp[i].res[j])->header = reallocate(((fasta_l) tp[i].res[j])->header, sizeof (char) * (strlen(((fasta_l) tp[i].res[j])->header) + 100), __FILE__, __LINE__);
+                        sprintf(((fasta_l) tp[i].res[j])->header, "%d-%d;%d", gi, from, taxId);
+                    }
+                    ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
+                    ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
                 }
-                ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
-                ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
             }
             free(tp[i].res);
         }
