@@ -19,7 +19,6 @@
 #include "bmemory.h"
 #include "bstring.h"
 #include "fasta.h"
-#include "taxonomy.h"
 
 char *program_name;
 
@@ -34,7 +33,7 @@ char *program_name;
  * @param threads_number Number of threads
  * @param inMem du the generation in memory
  */
-void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem, BtreeNode_t *gi_tax);
+void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem, int tax);
 
 void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "\n********************************************************************************\n");
@@ -51,7 +50,7 @@ void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "-t,   --split                       Split the result fasta file. Value in Gb (Ex: --split 2, not set for not split)\n");
     fprintf(stream, "-m,   --mem                         Do the pthread work in memory\n");
     fprintf(stream, "-n,   --name                        Just rename fasta file\n");
-    fprintf(stream, "-g,   --gi                          The GenBank Gi files\n");
+    fprintf(stream, "-x,   --tax                         To said that is a Taxoner db\n");
     fprintf(stream, "********************************************************************************\n");
     fprintf(stream, "\n            Roberto Vera Alvarez (e-mail: r78v10a07@gmail.com)\n\n");
     fprintf(stream, "********************************************************************************\n");
@@ -65,9 +64,9 @@ int main(int argc, char** argv) {
     fasta_l fasta;
 
     struct timespec start, stop, mid;
-    int i, next_option, verbose;
-    const char* const short_options = "vhi:o:l:f:s:p:t:mng:";
-    char *input, *output, *tmp, *giName;
+    int i, next_option, verbose, tax;
+    const char* const short_options = "vhi:o:l:f:s:p:t:mnx";
+    char *input, *output, *tmp;
     int length, offset, size, threads, count, mem, name;
     FILE *fo;
     FILE *fd;
@@ -75,7 +74,6 @@ int main(int argc, char** argv) {
     int ids_number, gi, fromTo;
     long long int countWords;
     long long int split;
-    BtreeNode_t *gi_tax = NULL;
 
     clock_gettime(CLOCK_MONOTONIC, &start);
     program_name = argv[0];
@@ -92,12 +90,12 @@ int main(int argc, char** argv) {
         { "split", 1, NULL, 't'},
         { "mem", 0, NULL, 'm'},
         { "name", 0, NULL, 'n'},
-        { "gi", 1, NULL, 'g'},
+        { "tax", 0, NULL, 'x'},
         { NULL, 0, NULL, 0} /* Required at end of array.  */
     };
 
-    verbose = split = countWords = count = mem = 0;
-    input = output = tmp = giName = NULL;
+    verbose = split = countWords = count = mem = tax = 0;
+    input = output = tmp = NULL;
     size = 80;
     length = offset = name = 0;
     threads = 1;
@@ -118,10 +116,6 @@ int main(int argc, char** argv) {
 
             case 'i':
                 input = strdup(optarg);
-                break;
-
-            case 'g':
-                giName = strdup(optarg);
                 break;
 
             case 'l':
@@ -151,6 +145,10 @@ int main(int argc, char** argv) {
             case 'n':
                 name = 1;
                 break;
+
+            case 'x':
+                tax = 1;
+                break;
         }
     } while (next_option != -1);
 
@@ -169,16 +167,6 @@ int main(int argc, char** argv) {
         fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
     }
 
-    if (giName) {
-        clock_gettime(CLOCK_MONOTONIC, &mid);
-        if (verbose) printf("Reading the Taxonomy-Nucleotide database ... ");
-        fflush(stdout);
-        gi_tax = TaxonomyNuclIndex(giName, verbose);
-        clock_gettime(CLOCK_MONOTONIC, &stop);
-        if (verbose) printf("%.1f sec\n", timespecDiffSec(&stop, &mid));
-        fflush(stdout);
-    }
-
     clock_gettime(CLOCK_MONOTONIC, &mid);
     while ((fasta = ReadFasta(fd, 0)) != NULL) {
         clock_gettime(CLOCK_MONOTONIC, &stop);
@@ -195,7 +183,7 @@ int main(int argc, char** argv) {
                     fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
                 }
             }
-            splitInSegmentsLocal(fasta, fo, length, offset, size, threads, mem, gi_tax);
+            splitInSegmentsLocal(fasta, fo, length, offset, size, threads, mem, tax);
         } else {
             gi = fromTo = -1;
             ids_number = splitString(&ids, ((fasta_l) fasta)->header, "|");
@@ -221,13 +209,8 @@ int main(int argc, char** argv) {
         clock_gettime(CLOCK_MONOTONIC, &mid);
     }
 
-    if (giName) {
-        BTreeFree(gi_tax, free);
-    }
-
     fclose(fd);
     fclose(fo);
-    if (giName) free(giName);
     if (tmp) free(tmp);
     if (input) free(input);
     if (output) free(output);

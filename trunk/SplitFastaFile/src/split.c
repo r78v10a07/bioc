@@ -20,7 +20,6 @@
 #include "bmemory.h"
 #include "bstring.h"
 #include "fasta.h"
-#include "taxonomy.h"
 
 #define SIZE 3072
 
@@ -51,7 +50,7 @@ extern void *pthreadSplitInSegmentsInMem(void *arg);
  * @param threads_number Number of threads
  * @param inMem du the generation in memory
  */
-void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem, BtreeNode_t *gi_tax) {
+void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem, int tax) {
     _CHECK_SELF_P(self);
     int i, j, reads, numPerThread, thread_cr_res, thread_join_res;
     pthread_t *threads = allocate(sizeof (pthread_t) * threads_number, __FILE__, __LINE__);
@@ -61,11 +60,17 @@ void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int li
     size_t bytes;
     char buffer[SIZE];
     FILE *fd;
-    BtreeRecord_t *rec;
-    int gi, from;
+    int gi, from, taxId;
 
     if (inMem == 0) {
         tFiles = allocate(sizeof (char **) * threads_number, __FILE__, __LINE__);
+    }
+
+    if (tax) {
+        ((fasta_l) self)->header = reallocate(((fasta_l) self)->header,
+                sizeof (char) * (strlen(((fasta_l) self)->header) + 100), __FILE__, __LINE__);
+        sscanf(((fasta_l) self)->header, "%d;%d", &gi, &taxId);
+        sprintf(((fasta_l) self)->header, "gi|%d", gi);
     }
 
     reads = ((fasta_l) self)->len / offset;
@@ -126,13 +131,10 @@ void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int li
             if (tFiles[i]) free(tFiles[i]);
         } else {
             for (j = 0; j < tp[i].resNumber; j++) {
-                if (gi_tax) {
+                if (tax) {
                     sscanf(((fasta_l) tp[i].res[j])->header, "%d|%d", &gi, &from);
-                    if ((rec = BTreeFind(gi_tax, gi, false)) != NULL) {
-                        ((fasta_l) tp[i].res[j])->header = reallocate(((fasta_l) tp[i].res[j])->header, sizeof(char) * (strlen(((fasta_l) tp[i].res[j])->header) + 100), __FILE__, __LINE__);
-                        sprintf(((fasta_l) tp[i].res[j])->header, "%d-%d;%d", gi, from,
-                                *((int *) rec->value));
-                    }
+                    ((fasta_l) tp[i].res[j])->header = reallocate(((fasta_l) tp[i].res[j])->header, sizeof (char) * (strlen(((fasta_l) tp[i].res[j])->header) + 100), __FILE__, __LINE__);
+                    sprintf(((fasta_l) tp[i].res[j])->header, "%d-%d;%d", gi, from, taxId);
                 }
                 ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
                 ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
