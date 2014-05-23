@@ -12,6 +12,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>split.c</itemPath>
       <itemPath>src/splitFasta.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -74,6 +75,8 @@
           </makeArtifact>
         </requiredProjects>
       </compileType>
+      <item path="split.c" ex="false" tool="0" flavor2="0">
+      </item>
       <item path="src/splitFasta.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>
@@ -97,6 +100,8 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <item path="split.c" ex="false" tool="0" flavor2="0">
+      </item>
       <item path="src/splitFasta.c" ex="false" tool="0" flavor2="0">
       </item>
     </conf>
