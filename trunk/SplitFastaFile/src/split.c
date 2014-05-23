@@ -76,7 +76,9 @@ void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int li
     reads = ((fasta_l) self)->len / offset;
     numPerThread = reads / threads_number;
 
+    printf("%d %s\n",((fasta_l) self)->len, ((fasta_l) self)->header);
     for (i = 0; i < threads_number; i++) {
+        PRINTFILELINE;
         fflush(NULL);
         if (inMem == 0) {
             tFiles[i] = allocate(sizeof (char *) * 150, __FILE__, __LINE__);
@@ -131,14 +133,23 @@ void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int li
             if (tFiles[i]) free(tFiles[i]);
         } else {
             for (j = 0; j < tp[i].resNumber; j++) {
+                PRINTFILELINE;
                 if (strstr(((fasta_l) tp[i].res[j])->seq, "NNNNN") == NULL) {
+                    PRINTFILELINE;
                     if (tax) {
+                        PRINTFILELINE;
                         sscanf(((fasta_l) tp[i].res[j])->header, "%d|%d", &gi, &from);
+                        PRINTFILELINE;
                         ((fasta_l) tp[i].res[j])->header = reallocate(((fasta_l) tp[i].res[j])->header, sizeof (char) * (strlen(((fasta_l) tp[i].res[j])->header) + 100), __FILE__, __LINE__);
+                        PRINTFILELINE;
                         sprintf(((fasta_l) tp[i].res[j])->header, "%d-%d;%d", gi, from, taxId);
+                        PRINTFILELINE;
                     }
+                    PRINTFILELINE;
                     ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
+                    PRINTFILELINE;
                     ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
+                    PRINTFILELINE;
                 }
             }
             free(tp[i].res);
