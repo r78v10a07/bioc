@@ -28,6 +28,7 @@ typedef struct thread_param {
     int number;
     void * self;
     char *out;
+    char *parser;
     int start;
     int end;
     int length;
@@ -110,10 +111,19 @@ void getGi(void *self, int *gi) {
     for (i = 0; i < ids_number; i++) {
         if (strcmp(ids[i], "gi") == 0 && i < ids_number - 1) {
             *gi = atoi(ids[i + 1]);
+            if (*gi <= 0) {
+                fprintf(stderr, "%s Trying to do atoi in:  %s\n", ids[i], ids[i + 1]);
+                fprintf(stderr, "Can't find Gi %d on: %s\nThe format have to be gi|ginumber: >gi|12345\n", *gi, ((fasta_l) self)->header);
+                exit(1);
+            }
             break;
         }
     }
     freeArrayofPointers((void **) ids, ids_number);
+    if (*gi <= 0) {
+        fprintf(stderr, "Can't find Gi %d on: %s\nThe format have to be gi|ginumber: >gi|12345\n", *gi, ((fasta_l) self)->header);
+        exit(1);
+    }
 }
 
 /**
@@ -155,23 +165,22 @@ void freeFasta(void *self) {
  */
 void getSegment(void **outvoid, void * self, char *header, int start, int length) {
     _CHECK_SELF_P(self);
-    fasta_l out = CreateFasta();
+    fasta_l out;
     int size;
-    char *tmp;
 
     *outvoid = NULL;
     if (start < ((fasta_l) self)->len) {
+        out = CreateFasta();
         if (start + length < ((fasta_l) self)->len) {
             size = length;
         } else {
             size = ((fasta_l) self)->len - start;
         }
-        out->setHeader(out, header);
-        tmp = allocate(sizeof (char) * (length + 1), __FILE__, __LINE__);
-        memset(tmp, 0, sizeof (char) * (length + 1));
-        strncpy(tmp, (((fasta_l) self)->seq + start), size);
-        out->setSeq(out, tmp);
-        free(tmp);
+        out->header = strdup(header);
+        out->seq = allocate(sizeof (char) * (size + 1), __FILE__, __LINE__);
+        memset(out->seq, 0, sizeof (char) * (size + 1));
+        strncpy(out->seq, (((fasta_l) self)->seq + start), size);
+        out->len = size;
         *outvoid = out;
     }
 }
@@ -190,7 +199,7 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
     _CHECK_SELF_P(self);
     fasta_l outf;
     int size;
-    char *tmp;
+    
     if (start < ((fasta_l) self)->len) {
         if (start + length < ((fasta_l) self)->len) {
             size = length;
@@ -199,10 +208,9 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
         }
         outf = CreateFasta();
         outf->setHeader(outf, header);
-        tmp = allocate(sizeof (char) * (size + 1), __FILE__, __LINE__);
-        memset(tmp, 0, sizeof (char) * (size + 1));
-        strncpy(tmp, (((fasta_l) self)->seq + start), size);
-        outf->seq = tmp;
+        outf->seq = allocate(sizeof (char) * (size + 1), __FILE__, __LINE__);
+        memset(outf->seq, 0, sizeof (char) * (size + 1));
+        strncpy(outf->seq, (((fasta_l) self)->seq + start), size);
         outf->len = size;
         outf->toFile(outf, out, lineLength);
         outf->free(outf);
@@ -240,7 +248,11 @@ void *pthreadSplitInSegmentsInMem(void *arg) {
 
     memset(header, 0, size);
     for (i = parms->start; i < parms->end; i += parms->offset) {
-        ((fasta_l) self)->getGi(self, &gi);
+        sscanf(((fasta_l) self)->header, parms->parser, &gi);
+        if (gi <= 0) {
+            fprintf(stderr, "Bad GI %d on header: %s\n", gi, ((fasta_l) self)->header);
+            exit(-1);
+        }
         sprintf(header, "%d|%d-%d", gi, i, i + parms->length);
         res = realloc(res, sizeof (void **) * (resNumber + 1));
         checkPointerError(res, "Can't allocate memory", __FILE__, __LINE__, -1);
@@ -260,13 +272,14 @@ void *pthreadSplitInSegmentsInMem(void *arg) {
  * 
  * @param self the container object
  * @param out the output file 
+ * @param headerParser sscanf format to parse the fasta header
  * @param length the length of the segments
  * @param offset the offset of the segments
  * @param lineLength the length of the fasta line
  * @param threads_number Number of threads
  * @param inMem du the generation in memory
  */
-void splitInSegments(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem) {
+void splitInSegments(void * self, FILE *out, char *headerParser, int length, int offset, int lineLength, int threads_number, int inMem) {
     _CHECK_SELF_P(self);
     int i, j, reads, numPerThread, thread_cr_res, thread_join_res;
     pthread_t *threads = allocate(sizeof (pthread_t) * threads_number, __FILE__, __LINE__);
@@ -292,6 +305,7 @@ void splitInSegments(void * self, FILE *out, int length, int offset, int lineLen
             tp[i].out = tFiles[i];
         }
 
+        tp[i].parser = headerParser;
         tp[i].number = i;
         tp[i].length = length;
         tp[i].lineLength = lineLength;
@@ -339,7 +353,9 @@ void splitInSegments(void * self, FILE *out, int length, int offset, int lineLen
             if (tFiles[i]) free(tFiles[i]);
         } else {
             for (j = 0; j < tp[i].resNumber; j++) {
-                ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
+                if (strstr(((fasta_l) tp[i].res[j])->seq, "NNNNN") == NULL) {
+                    ((fasta_l) tp[i].res[j])->toFile(tp[i].res[j], out, lineLength);
+                }
                 ((fasta_l) tp[i].res[j])->free(tp[i].res[j]);
             }
             free(tp[i].res);
