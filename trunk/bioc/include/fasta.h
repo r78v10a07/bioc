@@ -66,13 +66,14 @@ extern "C" {
          * 
          * @param self the container object
          * @param out the output file 
+         * @param headerParser sscanf format to parse the fasta header
          * @param length the length of the segments
          * @param offset the offset of the segments
          * @param lineLength the length of the fasta line
          * @param threads_number Number of threads
          * @param inMem du the generation in memory
          */
-        void (*splitInSegments)(void * self, FILE *out, int length, int offset, int lineLength, int threads_number, int inMem);
+        void (*splitInSegments)(void * self, FILE *out, char *headerParser, int length, int offset, int lineLength, int threads_number, int inMem);
 
         /**
          * Extract and print a segments from the start position with length

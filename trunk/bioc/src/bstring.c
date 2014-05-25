@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "berror.h"
 
 /**
@@ -22,14 +23,16 @@
 size_t splitString(char ***dest, char *src, char *delimiter) {
     size_t count = 0;
     char *token;
-    char *srccpy = strdup(src);
-
+    char *srccpy;
+    
+    srccpy = strdup(src);
     *dest = NULL;
     token = strtok(srccpy, delimiter);
     while (token) {
         *dest = (char **) checkPointerError(realloc(*dest, sizeof (char **) * (count + 1)), "Can't allocate memory", __FILE__, __LINE__, -1);
-        (*dest)[count++] = strdup(token);
+        (*dest)[count] = strdup(token);
         token = strtok(NULL, delimiter);
+        count++;
     }
     if (srccpy)free(srccpy);
     return count;
