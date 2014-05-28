@@ -23,4 +23,4 @@ Associated to the library there are some applications:
   * [https://code.google.com/p/bioc/source/browse/trunk/SplitFastaFile/ Split a fasta file by overlapped reads]
   * [https://code.google.com/p/bioc/source/browse/trunk/TaxLineageFromGi/ Print the taxonomy lineage from GenBank Gi]
   * [https://code.google.com/p/bioc/source/browse/trunk/TaxLineageFromTaxId Print the taxonomy lineage from TaxId]
-  * [https://code.google.com/p/bioc/source/browse/trunk/TaxonerAssamblerMarkerDB/ An basic assembler program for the Taxoner output using overlaped reads]
+  * [https://code.google.com/p/bioc/source/browse/trunk/TaxonerAssamblerMarkerDB/ A basic assembler program for the Taxoner output using overlapped reads]
