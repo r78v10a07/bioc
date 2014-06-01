@@ -239,31 +239,31 @@ BtreeNode_t *TaxonomyDBIndex(char *dir, int verbose) {
 }
 
 /**
- * Read the gi_taxid_nucl.dmp.gz file from NCBI Taxonomy and return a Btree 
- * index ober the Gi
+ * Read the gi_taxid_nucl.dmp file from NCBI Taxonomy and return a Btree 
+ * index over the Gi
  * 
- * @param filename the gi_taxid_nucl.dmp.gz complete path
+ * @param filename the gi_taxid_nucl.dmp complete path
  * @param verbose 1 to print a verbose info
  * @return 
  */
 BtreeNode_t *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose) {
     struct timespec start, stop;
-    gzFile gFile;
+    FILE *fi;
     BtreeNode_t *root = NULL;
-    char *buffer = NULL;
     int gi;
     int *taxid;
     int count = 0;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
 
     if (verbose) printf("\n");
     clock_gettime(CLOCK_MONOTONIC, &start);
-    gFile = checkPointerError(gzopen(gi_taxid_nucl, "rb"), "Can't open the gi_taxid_nucl.dmp.gz file", __FILE__, __LINE__, -1);
+    fi = checkPointerError(fopen(gi_taxid_nucl, "r"), "Can't open the gi_taxid_nucl.dmp.gz file", __FILE__, __LINE__, -1);
 
-    buffer = allocate(sizeof (char) * 101, __FILE__, __LINE__);
-    while (!gzeof(gFile)) {
-        gzgets(gFile, buffer, 100);
+    while ((read = getline(&line, &len, fi)) != -1) {
         taxid = (int *) malloc(sizeof (int));
-        sscanf(buffer, "%d\t%d\n", &gi, taxid);
+        sscanf(line, "%d\t%d\n", &gi, taxid);
         root = BtreeInsert(root, gi, taxid);
         if (verbose && count % 10000 == 0) {
             clock_gettime(CLOCK_MONOTONIC, &stop);
@@ -272,8 +272,8 @@ BtreeNode_t *TaxonomyNuclIndex(char *gi_taxid_nucl, int verbose) {
         count++;
     }
 
-    if (buffer) free(buffer);
-    gzclose(gFile);
+    if (line) free(line);
+    fclose(fi);
     clock_gettime(CLOCK_MONOTONIC, &stop);
     if (verbose) printf("\n\tThere are %d GIs into the B+Tree. Elapsed time: %.2f sec\n\n", count, timespecDiffSec(&stop, &start));
     fflush(NULL);
