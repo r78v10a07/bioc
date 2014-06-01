@@ -60,24 +60,15 @@ void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int li
     size_t bytes;
     char buffer[SIZE];
     FILE *fd;
-    int gi, from, taxId;
 
     if (inMem == 0) {
         tFiles = allocate(sizeof (char **) * threads_number, __FILE__, __LINE__);
-    }
-
-    if (tax) {
-        ((fasta_l) self)->header = reallocate(((fasta_l) self)->header,
-                sizeof (char) * (strlen(((fasta_l) self)->header) + 100), __FILE__, __LINE__);
-        sscanf(((fasta_l) self)->header, "%d;%d", &gi, &taxId);
-        sprintf(((fasta_l) self)->header, "gi|%d", gi);
-    }
+    }   
 
     reads = ((fasta_l) self)->len / offset;
     numPerThread = reads / threads_number;
 
     for (i = 0; i < threads_number; i++) {
-        fflush(NULL);
         if (inMem == 0) {
             tFiles[i] = allocate(sizeof (char *) * 150, __FILE__, __LINE__);
             sprintf(tFiles[i], "%d_%d.fna", pid, i);
@@ -115,7 +106,6 @@ void splitInSegmentsLocal(void * self, FILE *out, int length, int offset, int li
     }
 
     for (i = 0; i < threads_number; i++) {
-        fflush(NULL);
         thread_join_res = pthread_join(threads[i], NULL);
         if (thread_join_res != 0) {
             checkPointerError(NULL, "JOIN ERROR", __FILE__, __LINE__, -1);
