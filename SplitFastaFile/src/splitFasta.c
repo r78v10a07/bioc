@@ -19,6 +19,7 @@
 #include "bmemory.h"
 #include "bstring.h"
 #include "fasta.h"
+#include "taxonomy.h"
 
 char *program_name;
 
@@ -50,7 +51,8 @@ void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "-t,   --split                       Split the result fasta file. Value in Gb (Ex: --split 2, not set for not split)\n");
     fprintf(stream, "-m,   --mem                         Do the pthread work in memory\n");
     fprintf(stream, "-n,   --name                        Just rename fasta file\n");
-    fprintf(stream, "-x,   --tax                         To said that is a Taxoner db\n");
+    fprintf(stream, "-r,   --parser                      Sscanf format to parse the fasta header (Don't use it for default fasta header)\n");
+    fprintf(stream, "-g,   --gi                          The GenBank Gi files\n");
     fprintf(stream, "********************************************************************************\n");
     fprintf(stream, "\n            Roberto Vera Alvarez (e-mail: r78v10a07@gmail.com)\n\n");
     fprintf(stream, "********************************************************************************\n");
@@ -64,16 +66,18 @@ int main(int argc, char** argv) {
     fasta_l fasta;
 
     struct timespec start, stop, mid;
-    int i, next_option, verbose, tax;
-    const char* const short_options = "vhi:o:l:f:s:p:t:mnx";
-    char *input, *output, *tmp;
+    int i, next_option, verbose;
+    const char* const short_options = "vhi:o:l:f:s:p:t:mnr:g:";
+    char *input, *output, *tmp, *headerParser, *giName;
     int length, offset, size, threads, count, mem, name;
     FILE *fo;
     FILE *fd;
     char **ids = NULL;
-    int ids_number, gi, fromTo;
+    int ids_number, gi, fromTo, tax;
     long long int countWords;
     long long int split;
+    BtreeNode_t *gi_tax = NULL;
+    BtreeRecord_t *rec;
 
     clock_gettime(CLOCK_MONOTONIC, &start);
     program_name = argv[0];
@@ -91,11 +95,13 @@ int main(int argc, char** argv) {
         { "mem", 0, NULL, 'm'},
         { "name", 0, NULL, 'n'},
         { "tax", 0, NULL, 'x'},
+        { "parser", 0, NULL, 'r'},
+        { "gi", 1, NULL, 'g'},
         { NULL, 0, NULL, 0} /* Required at end of array.  */
     };
 
-    verbose = split = countWords = count = mem = tax = 0;
-    input = output = tmp = NULL;
+    verbose = split = countWords = count = mem = 0;
+    input = output = tmp = headerParser = giName = NULL;
     size = 80;
     length = offset = name = 0;
     threads = 1;
@@ -116,6 +122,10 @@ int main(int argc, char** argv) {
 
             case 'i':
                 input = strdup(optarg);
+                break;
+
+            case 'g':
+                giName = strdup(optarg);
                 break;
 
             case 'l':
@@ -146,8 +156,8 @@ int main(int argc, char** argv) {
                 name = 1;
                 break;
 
-            case 'x':
-                tax = 1;
+            case 'r':
+                headerParser = strdup(optarg);
                 break;
         }
     } while (next_option != -1);
@@ -167,11 +177,26 @@ int main(int argc, char** argv) {
         fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
     }
 
+    if (!headerParser) {
+        headerParser = allocate(sizeof (char) * 10, __FILE__, __LINE__);
+        sprintf(headerParser, "gi|%%d|");
+    }
+
+    if (giName) {
+        clock_gettime(CLOCK_MONOTONIC, &mid);
+        if (verbose) printf("Reading the Taxonomy-Nucleotide database ... ");
+        fflush(stdout);
+        gi_tax = TaxonomyNuclIndex(giName, verbose);
+        clock_gettime(CLOCK_MONOTONIC, &stop);
+        if (verbose) printf("%.1f sec\n", timespecDiffSec(&stop, &mid));
+        fflush(stdout);
+    }
+
     clock_gettime(CLOCK_MONOTONIC, &mid);
     while ((fasta = ReadFasta(fd, 0)) != NULL) {
         clock_gettime(CLOCK_MONOTONIC, &stop);
         if (verbose) printf("Read sequence of size: %8d in %4.2f sec\n", fasta->len, timespecDiffSec(&stop, &mid));
-        if (name == 0) {
+        if (name == 0 && !giName) {
             if (split != 0) {
                 countWords += fasta->length(fasta);
                 if (countWords >= split * 1024 * 1024 * 1024) {
@@ -183,8 +208,8 @@ int main(int argc, char** argv) {
                     fo = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
                 }
             }
-            splitInSegmentsLocal(fasta, fo, length, offset, size, threads, mem, tax);
-        } else {
+            fasta->splitInSegments(fasta, fo, headerParser, length, offset, size, threads, mem);
+        } else if (name && !giName){
             gi = fromTo = -1;
             ids_number = splitString(&ids, ((fasta_l) fasta)->header, "|");
             for (i = 0; i < ids_number; i++) {
@@ -204,13 +229,30 @@ int main(int argc, char** argv) {
             fasta->toFile(fasta, fo, size);
 
             freeArrayofPointers((void **) ids, ids_number);
+        }else if(giName){
+            if (sscanf(fasta->header,headerParser,&gi) != 1){
+                fasta->toString(fasta, size);
+                checkPointerError(NULL, "Error reading header", __FILE__, __LINE__, -1);
+            }
+            if ((rec = BTreeFind(gi_tax, gi, false)) != NULL) {
+                tax = *((int *) rec->value);
+                fasta->header = reallocate(fasta->header, sizeof(char) * (strlen(fasta->header) + 50),__FILE__, __LINE__);
+                sprintf(fasta->header,"%s;%d",fasta->header, tax);
+                fasta->toFile(fasta, fo, size);
+            }
         }
         fasta->free(fasta);
         clock_gettime(CLOCK_MONOTONIC, &mid);
     }
+    
+    if (giName) {
+        BTreeFree(gi_tax, free);
+        free(giName);
+    }
 
     fclose(fd);
     fclose(fo);
+    if (headerParser) free(headerParser);
     if (tmp) free(tmp);
     if (input) free(input);
     if (output) free(output);
