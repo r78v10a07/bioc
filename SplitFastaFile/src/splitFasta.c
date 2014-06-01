@@ -162,7 +162,7 @@ int main(int argc, char** argv) {
         }
     } while (next_option != -1);
 
-    if (!input || !output || ((length <= 0 || offset <= 0 || size <= 0) && name == 0)) {
+    if (!input || !output || ((length <= 0 || offset <= 0 || size <= 0) && (name == 0 || !giName))) {
         print_usage(stderr, -1);
     }
 
