@@ -52,7 +52,7 @@ void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "-m,   --mem                         Do the pthread work in memory\n");
     fprintf(stream, "-n,   --name                        Just rename fasta file\n");
     fprintf(stream, "-r,   --parser                      Sscanf format to parse the fasta header (Don't use it for default fasta header)\n");
-    fprintf(stream, "-g,   --gi                          The GenBank Gi files\n");
+    fprintf(stream, "-g,   --gi                          The GenBank Gi files. If  -n is used the output header is >gi;taxId\n");
     fprintf(stream, "********************************************************************************\n");
     fprintf(stream, "\n            Roberto Vera Alvarez (e-mail: r78v10a07@gmail.com)\n\n");
     fprintf(stream, "********************************************************************************\n");
@@ -209,7 +209,7 @@ int main(int argc, char** argv) {
                 }
             }
             fasta->splitInSegments(fasta, fo, headerParser, length, offset, size, threads, mem);
-        } else if (name && !giName){
+        } else if (name && !giName) {
             gi = fromTo = -1;
             ids_number = splitString(&ids, ((fasta_l) fasta)->header, "|");
             for (i = 0; i < ids_number; i++) {
@@ -229,22 +229,26 @@ int main(int argc, char** argv) {
             fasta->toFile(fasta, fo, size);
 
             freeArrayofPointers((void **) ids, ids_number);
-        }else if(giName){
-            if (sscanf(fasta->header,headerParser,&gi) != 1){
+        } else if (giName) {
+            if (sscanf(fasta->header, headerParser, &gi) != 1) {
                 fasta->toString(fasta, size);
                 checkPointerError(NULL, "Error reading header", __FILE__, __LINE__, -1);
             }
             if ((rec = BTreeFind(gi_tax, gi, false)) != NULL) {
                 tax = *((int *) rec->value);
-                fasta->header = reallocate(fasta->header, sizeof(char) * (strlen(fasta->header) + 50),__FILE__, __LINE__);
-                sprintf(fasta->header,"%s;%d",fasta->header, tax);
+                fasta->header = reallocate(fasta->header, sizeof (char) * (strlen(fasta->header) + 50), __FILE__, __LINE__);
+                if (!name) {
+                    sprintf(fasta->header, "%s;%d", fasta->header, tax);
+                } else {
+                    sprintf(fasta->header, "%d;%d", gi, tax);
+                }
                 fasta->toFile(fasta, fo, size);
             }
         }
         fasta->free(fasta);
         clock_gettime(CLOCK_MONOTONIC, &mid);
     }
-    
+
     if (giName) {
         BTreeFree(gi_tax, free);
         free(giName);
