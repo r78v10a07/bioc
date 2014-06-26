@@ -134,6 +134,15 @@ extern "C" {
      */
     extern BtreeNode_t *BTreeFree(BtreeNode_t * root, void freeRecord(void *));
 
+    /**
+     * Go to the leaf and create an array of void pointer with the records
+     * 
+     * @param index the resulting array
+     * @param size number of elements in the resulting array
+     * @param root the BTree node to start
+     */
+    extern void BtreeRecordsToArray(void ***index, int *size, BtreeNode_t * root);
+
 #ifdef	__cplusplus
 }
 #endif

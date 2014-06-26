@@ -27,6 +27,7 @@
 #include "btree.h"
 #include "berror.h"
 #include "bmemory.h"
+#include "taxonomy.h"
 
 /* The order determines the maximum and minimum
  * number of entries (keys and pointers) in any
@@ -139,9 +140,9 @@ BtreeRecord_t * make_record(void *value) {
 BtreeNode_t * make_node(void) {
     BtreeNode_t * new_node;
     new_node = allocate(sizeof (BtreeNode_t), __FILE__, __LINE__);
-    new_node->keys = allocate((order - 1) * sizeof (int), __FILE__, __LINE__);    
+    new_node->keys = allocate((order - 1) * sizeof (int), __FILE__, __LINE__);
     new_node->pointers = allocate(order * sizeof (void *), __FILE__, __LINE__);
-    
+
     new_node->is_leaf = false;
     new_node->num_keys = 0;
     new_node->parent = NULL;
@@ -564,6 +565,32 @@ void BtreePrintTree(BtreeNode_t * root) {
         printf("| ");
     }
     printf("\n");
+}
+
+/**
+ * Go to the leaf and create an array of void pointer with the records
+ * 
+ * @param index the resulting array
+ * @param size number of elements in the resulting array
+ * @param root the BTree node to start
+ */
+void BtreeRecordsToArray(void ***index, int *size, BtreeNode_t * root) {
+    int i;
+
+    if (root == NULL) {
+        return;
+    }
+    if (!root->is_leaf) {
+        for (i = 0; i <= root->num_keys; i++) {
+            BtreeRecordsToArray(index, size, root->pointers[i]);
+        }
+    } else {
+        *index = (void **) realloc(*index, sizeof (void**) * (*size + root->num_keys));
+        for (i = 0; i < root->num_keys; i++) {
+            (*index)[*size + i] = ((BtreeRecord_t *) root->pointers[i])->value;
+        }
+        *size += root->num_keys;
+    };
 }
 
 /**
