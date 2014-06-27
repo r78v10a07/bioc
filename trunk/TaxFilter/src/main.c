@@ -222,7 +222,7 @@ int main(int argc, char** argv) {
     count = countWords = 0;
     fd1 = checkPointerError(fopen(ntName, "r"), "Can't open include file", __FILE__, __LINE__, -1);
     tmp = allocate(sizeof (char) * (strlen(output) + 100), __FILE__, __LINE__);
-    sprintf(tmp, "%s_%d.fna", output, count);
+    sprintf(tmp, "%s_%d.fasta", output, count);
     if (verbose) printf("Creating a new file: %s\n", tmp);
     fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
     
@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
                     count++;
                     countWords = fasta->length(fasta);
                     fclose(fd2);
-                    sprintf(tmp, "%s_%d.fna", output, count);
+                    sprintf(tmp, "%s_%d.fasta", output, count);
                     if (verbose) printf("Creating a new file: %s\n", tmp);
                     fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
                 }
