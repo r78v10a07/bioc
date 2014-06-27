@@ -43,12 +43,13 @@ void print_usage(FILE *stream, int exit_code) {
     exit(0);
 }
 
-BtreeNode_t *TaxsToInclude(BtreeNode_t *taxDB, char *include, char *skip, int verbose) {
+BtreeNode_t *TaxsToInclude(char *dirName, char *include, char *skip, int verbose) {
     FILE *fd1, *fd2;
 
     int *lineage, lineage_number, *value;
     void **records = NULL;
     int i, j, records_number = 0;
+    BtreeNode_t *taxDB = NULL;
     BtreeNode_t *taxIn = NULL;
     BtreeNode_t *toInTaxId = NULL;
     BtreeNode_t *toSkTaxId = NULL;
@@ -57,6 +58,8 @@ BtreeNode_t *TaxsToInclude(BtreeNode_t *taxDB, char *include, char *skip, int ve
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
+
+    taxDB = TaxonomyDBIndex(dirName, verbose);
 
     fd2 = NULL;
     fd1 = checkPointerError(fopen(include, "r"), "Can't open include file", __FILE__, __LINE__, -1);
@@ -104,6 +107,10 @@ BtreeNode_t *TaxsToInclude(BtreeNode_t *taxDB, char *include, char *skip, int ve
         }
     }
 
+    tax = CreateTaxonomy();
+    BTreeFree(taxDB, tax->free);
+    tax->free(tax);
+
     BTreeFree(toInTaxId, free);
     BTreeFree(toSkTaxId, free);
     if (records) {
@@ -119,16 +126,16 @@ BtreeNode_t *TaxsToInclude(BtreeNode_t *taxDB, char *include, char *skip, int ve
  * 
  */
 int main(int argc, char** argv) {
-    struct timespec start, stop;
-    int next_option, verbose, count, lineSize;
+    struct timespec start, stop, mid;
+    int next_option, verbose, count, lineSize, gi;
     const char* const short_options = "vhn:o:t:d:s:i:";
     char *ntName, *output, *taxgiName, *tmp, *dirName, *skipName, *includeName;
 
     FILE *fd1, *fd2;
 
-    taxonomy_l tax;
-    BtreeNode_t *taxDB = NULL;
     BtreeNode_t *taxIn = NULL;
+    BtreeNode_t *gi_tax = NULL;
+    BtreeRecord_t *rec;
 
     fasta_l fasta;
     long long int countWords;
@@ -196,8 +203,19 @@ int main(int argc, char** argv) {
         print_usage(stderr, -1);
     }
 
-    taxDB = TaxonomyDBIndex(dirName, verbose);
-    taxIn = TaxsToInclude(taxDB, includeName, skipName, verbose);
+    taxIn = TaxsToInclude(dirName, includeName, skipName, verbose);
+
+    clock_gettime(CLOCK_MONOTONIC, &mid);
+    if (verbose) {
+        printf("Reading the Taxonomy-Nucleotide database ... ");
+        fflush(stdout);
+    }
+    gi_tax = TaxonomyNuclIndex(taxgiName, verbose);
+    clock_gettime(CLOCK_MONOTONIC, &stop);
+    if (verbose) {
+        printf("%.1f sec\n", timespecDiffSec(&stop, &mid));
+        fflush(stdout);
+    }
 
     count = countWords = 0;
     fd1 = checkPointerError(fopen(ntName, "r"), "Can't open include file", __FILE__, __LINE__, -1);
@@ -205,25 +223,29 @@ int main(int argc, char** argv) {
     sprintf(tmp, "%s_%d.fna", output, count);
     if (verbose) printf("Creating a new file: %s\n", tmp);
     fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
+    
     while ((fasta = ReadFasta(fd1, 0)) != NULL) {
-        countWords += (fasta->length(fasta) + strlen(fasta->header) + 3);
-        if (countWords > 4294967296) {
-            count++;
-            countWords = fasta->length(fasta);
-            fclose(fd2);
-            sprintf(tmp, "%s_%d.fna", output, count);
-            if (verbose) printf("Creating a new file: %s\n", tmp);
-            fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
+        fasta->getGi(fasta, &gi);
+        if ((rec = BTreeFind(gi_tax, gi, false)) != NULL) {
+            if ((rec = BTreeFind(taxIn, *((int *) rec->value), false)) != NULL) {
+                sprintf(fasta->header, "%d;%d", gi, *((int *) rec->value));
+                countWords += (fasta->length(fasta) + strlen(fasta->header) + 3);
+                if (countWords > 4294967296) {
+                    count++;
+                    countWords = fasta->length(fasta);
+                    fclose(fd2);
+                    sprintf(tmp, "%s_%d.fna", output, count);
+                    if (verbose) printf("Creating a new file: %s\n", tmp);
+                    fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
+                }
+                fasta->toFile(fasta, fd2, lineSize);
+            }
         }
-        fasta->toFile(fasta, fd2, lineSize);
         fasta->free(fasta);
     }
 
-    tax = CreateTaxonomy();
-    BTreeFree(taxDB, tax->free);
-    BTreeFree(taxIn, free);
-    tax->free(tax);
 
+    BTreeFree(taxIn, free);
     if (fd1) fclose(fd1);
     if (fd2) fclose(fd2);
     if (dirName) free(dirName);
