@@ -127,7 +127,7 @@ BtreeNode_t *TaxsToInclude(char *dirName, char *include, char *skip, int verbose
  */
 int main(int argc, char** argv) {
     struct timespec start, stop, mid;
-    int next_option, verbose, count, lineSize, gi;
+    int next_option, verbose, count, lineSize, gi, countSeq;
     const char* const short_options = "vhn:o:t:d:s:i:";
     char *ntName, *output, *taxgiName, *tmp, *dirName, *skipName, *includeName;
 
@@ -230,6 +230,7 @@ int main(int argc, char** argv) {
     tot = ftello(fd1);
     fseeko(fd1, 0, SEEK_SET);
 
+    countSeq = 0;
     pos = 0;
     while ((fasta = ReadFasta(fd1, 0)) != NULL) {
         fasta->getGi(fasta, &gi);
@@ -245,13 +246,14 @@ int main(int argc, char** argv) {
                     if (verbose) printf("Creating a new file: %s\n", tmp);
                     fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
                 }
+                countSeq++;
                 fasta->toFile(fasta, fd2, lineSize);
             }
         }
         percent = (float) (pos * 100) / tot;
 
         if (verbose) {
-            printf("\t%6.2f%%\r", percent);
+            printf("\t%12d\t%6.2f%%\r", countSeq, percent);
         }
 
         fasta->free(fasta);
@@ -259,7 +261,7 @@ int main(int argc, char** argv) {
     }
 
     if (verbose) {
-        printf("\t%6.2f%% \n", atof("100.00"));
+        printf("\t%12d\t%6.2f%% \n", countSeq, atof("100.00"));
     }
 
     BTreeFree(gi_tax, free);
