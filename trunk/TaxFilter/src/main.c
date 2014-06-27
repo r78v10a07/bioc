@@ -225,7 +225,7 @@ int main(int argc, char** argv) {
     sprintf(tmp, "%s_%d.fasta", output, count);
     if (verbose) printf("Creating a new file: %s\n", tmp);
     fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
-    
+
     fseeko(fd1, SEEK_END, 0);
     tot = ftello(fd1);
     fseeko(fd1, SEEK_SET, 0);
@@ -248,7 +248,7 @@ int main(int argc, char** argv) {
                 fasta->toFile(fasta, fd2, lineSize);
             }
         }
-        percent = (pos * 100) / tot;
+        percent = (float) (pos * 100) / tot;
 
         if (verbose) {
             printf("\t%6.2f%% \r", percent);
