@@ -24,3 +24,4 @@ Associated to the library there are some applications:
   * [https://code.google.com/p/bioc/source/browse/trunk/TaxLineageFromGi/ Print the taxonomy lineage from GenBank Gi]
   * [https://code.google.com/p/bioc/source/browse/trunk/TaxLineageFromTaxId Print the taxonomy lineage from TaxId]
   * [https://code.google.com/p/bioc/source/browse/trunk/TaxonerAssamblerMarkerDB/ A basic assembler program for the Taxoner output using overlapped reads]
+  * [https://code.google.com/p/bioc/source/browse/trunk/TaxFilter/ A taxonomic filter for the NCBI nt fasta file]
