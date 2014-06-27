@@ -251,7 +251,7 @@ int main(int argc, char** argv) {
         percent = (float) (pos * 100) / tot;
 
         if (verbose) {
-            printf("\t%6.2f%% \r", percent);
+            printf("\t%6.2f%% %llu %llu\r", percent, pos, tot);
         }
 
         fasta->free(fasta);
