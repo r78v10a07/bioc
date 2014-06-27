@@ -132,6 +132,8 @@ int main(int argc, char** argv) {
     char *ntName, *output, *taxgiName, *tmp, *dirName, *skipName, *includeName;
 
     FILE *fd1, *fd2;
+    off_t pos, tot;
+    float percent;
 
     BtreeNode_t *taxIn = NULL;
     BtreeNode_t *gi_tax = NULL;
@@ -224,6 +226,11 @@ int main(int argc, char** argv) {
     if (verbose) printf("Creating a new file: %s\n", tmp);
     fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
     
+    fseeko(fd1, SEEK_END, 0);
+    tot = ftello(fd1);
+    fseeko(fd1, SEEK_SET, 0);
+
+    pos = 0;
     while ((fasta = ReadFasta(fd1, 0)) != NULL) {
         fasta->getGi(fasta, &gi);
         if ((rec = BTreeFind(gi_tax, gi, false)) != NULL) {
@@ -241,10 +248,21 @@ int main(int argc, char** argv) {
                 fasta->toFile(fasta, fd2, lineSize);
             }
         }
+        percent = (pos * 100) / tot;
+
+        if (verbose) {
+            printf("\t%6.2f%% \r", percent);
+        }
+
         fasta->free(fasta);
+        pos = ftello(fd1);
     }
 
+    if (verbose) {
+        printf("\t%6.2f%% \n", atof("100.00"));
+    }
 
+    BTreeFree(gi_tax, free);
     BTreeFree(taxIn, free);
     if (fd1) fclose(fd1);
     if (fd2) fclose(fd2);
