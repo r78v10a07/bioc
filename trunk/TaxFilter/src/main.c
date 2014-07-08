@@ -332,6 +332,7 @@ int main(int argc, char** argv) {
         printf("\t%12d\t%6.2f%% \n", countSeq, atof("100.00"));
     }
 
+    free(tmp);
     free(seq);
     free(buffer);
     BTreeFree(gi_tax, free);
