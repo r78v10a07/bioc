@@ -232,10 +232,12 @@ int main(int argc, char** argv) {
 
     countSeq = 0;
     pos = 0;
-    while ((fasta = ReadFasta(fd1, 0)) != NULL) {
+    while ((fasta = ReadFasta(fd1, 1)) != NULL) {
         fasta->getGi(fasta, &gi);
         if ((rec = BTreeFind(gi_tax, gi, false)) != NULL) {
             if ((rec = BTreeFind(taxIn, *((int *) rec->value), false)) != NULL) {
+                fasta->free(fasta);
+                fasta = ReadFastaFromOffset(fd1, pos, 0);
                 sprintf(fasta->header, "%d;%d", gi, *((int *) rec->value));
                 countWords += (fasta->length(fasta) + strlen(fasta->header) + 3);
                 if (countWords > 4294967296) {
