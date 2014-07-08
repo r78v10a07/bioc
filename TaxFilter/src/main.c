@@ -139,7 +139,12 @@ int main(int argc, char** argv) {
     BtreeNode_t *gi_tax = NULL;
     BtreeRecord_t *rec;
 
-    fasta_l fasta;
+    int bufferSize, excludeSeq;
+    size_t buf_size, seq_size;
+    char *buffer, *seq, *line, *str;
+    int numLines, readTotal;
+
+    fasta_l self = NULL;
     long long int countWords;
 
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -232,40 +237,102 @@ int main(int argc, char** argv) {
 
     countSeq = 0;
     pos = 0;
-    while ((fasta = ReadFasta(fd1, 1)) != NULL) {
-        fasta->getGi(fasta, &gi);
-        if ((rec = BTreeFind(gi_tax, gi, false)) != NULL) {
-            if ((rec = BTreeFind(taxIn, *((int *) rec->value), false)) != NULL) {
-                fasta->free(fasta);
-                fasta = ReadFastaFromOffset(fd1, pos, 0);
-                sprintf(fasta->header, "%d;%d", gi, *((int *) rec->value));
-                countWords += (fasta->length(fasta) + strlen(fasta->header) + 3);
-                if (countWords > 4294967296) {
-                    count++;
-                    countWords = fasta->length(fasta);
-                    fclose(fd2);
-                    sprintf(tmp, "%s_%d.fasta", output, count);
-                    if (verbose) printf("Creating a new file: %s\n", tmp);
-                    fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
+    bufferSize = 7000000;
+    excludeSeq = 1;
+    seq_size = buf_size = sizeof (char) * bufferSize;
+    buffer = allocate(sizeof (char) * (bufferSize + 1), __FILE__, __LINE__);
+    seq = allocate(sizeof (char) * (bufferSize + 1), __FILE__, __LINE__);
+    memset(seq, 0, seq_size);
+    readTotal = 0;
+    numLines = 0;
+    while (!feof(fd1)) {
+        memset(buffer, 0, buf_size);
+        if (fread(buffer, buf_size, 1, fd1) == 1) buffer[bufferSize] = '\0';
+        str = buffer;
+        while (1) {
+            line = strchr(str, '\n');
+            if (line) *line = '\0';
+            if (*str != '\0' && *str != '\n') {
+                if (*str == '>') {
+                    if (self != NULL) {
+                        if (!excludeSeq) {
+                            self->seq = seq;
+                            self->len = strlen(seq);
+                            countWords += (self->len + strlen(self->header) + 3);
+                            if (countWords > 4294967296) {
+                                count++;
+                                countWords = self->len;
+                                fclose(fd2);
+                                sprintf(tmp, "%s_%d.fasta", output, count);
+                                if (verbose) printf("Creating a new file: %s\n", tmp);
+                                fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
+                            }
+                            countSeq++;
+                            self->toFile(self, fd2, lineSize);
+                            self->seq = NULL;
+                        }
+                        readTotal = 0;
+                        seq[0] = '\0';
+                        self->free(self);
+                    }
+
+                    readTotal += strlen(str);
+                    self = CreateFasta();
+                    self->header = strndup(str + 1, strlen(str) - 1);
+                    self->getGi(self, &gi);
+                    excludeSeq = 1;
+                    if ((rec = BTreeFind(gi_tax, gi, false)) != NULL) {
+                        if ((rec = BTreeFind(taxIn, *((int *) rec->value), false)) != NULL) {
+                            sprintf(self->header, "%d;%d", gi, *((int *) rec->value));
+                            excludeSeq = 0;
+                        }
+                    }
+                } else {
+                    checkPointerError(self, "The fasta file does not start with the header (>)", __FILE__, __LINE__, -1);
+                    readTotal += strlen(str);
+                    if (!excludeSeq) {
+                        if (readTotal >= seq_size) {
+                            seq_size += seq_size;
+                            seq = reallocate(seq, seq_size, __FILE__, __LINE__);
+                        }
+                        strcat(seq, str);
+                    }
                 }
-                countSeq++;
-                fasta->toFile(fasta, fd2, lineSize);
             }
+            if (!line) break;
+            str = line + 1;
+            numLines++;
         }
         percent = (float) (pos * 100) / tot;
-
         if (verbose) {
             printf("\t%12d\t%6.2f%%\r", countSeq, percent);
         }
-
-        fasta->free(fasta);
-        pos = ftello(fd1);
     }
-
+    if (self != NULL) {
+        if (!excludeSeq) {
+            self->setSeq(self, seq);
+            countWords += (self->length(self) + strlen(self->header) + 3);
+            if (countWords > 4294967296) {
+                count++;
+                countWords = self->length(self);
+                fclose(fd2);
+                sprintf(tmp, "%s_%d.fasta", output, count);
+                if (verbose) printf("Creating a new file: %s\n", tmp);
+                fd2 = checkPointerError(fopen(tmp, "w"), "Can't open output file", __FILE__, __LINE__, -1);
+            }
+            countSeq++;
+            self->toFile(self, fd2, lineSize);
+        }
+        readTotal = 0;
+        seq[0] = '\0';
+        self->free(self);
+    }
     if (verbose) {
         printf("\t%12d\t%6.2f%% \n", countSeq, atof("100.00"));
     }
 
+    free(seq);
+    free(buffer);
     BTreeFree(gi_tax, free);
     BTreeFree(taxIn, free);
     if (fd1) fclose(fd1);
