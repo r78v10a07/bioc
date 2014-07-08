@@ -114,15 +114,13 @@ void getGi(void *self, int *gi) {
             if (*gi <= 0) {
                 fprintf(stderr, "%s Trying to do atoi in:  %s\n", ids[i], ids[i + 1]);
                 fprintf(stderr, "Can't find Gi %d on: %s\nThe format have to be gi|ginumber: >gi|12345\n", *gi, ((fasta_l) self)->header);
-                exit(1);
             }
             break;
         }
     }
     freeArrayofPointers((void **) ids, ids_number);
     if (*gi <= 0) {
-        fprintf(stderr, "Can't find Gi %d on: %s\nThe format have to be gi|ginumber: >gi|12345\n", *gi, ((fasta_l) self)->header);
-        exit(1);
+        fprintf(stderr, "\nCan't find Gi %d on: %s\nThe format have to be gi|ginumber: >gi|12345\n", *gi, ((fasta_l) self)->header);
     }
 }
 
