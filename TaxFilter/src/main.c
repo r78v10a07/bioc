@@ -303,6 +303,7 @@ int main(int argc, char** argv) {
             str = line + 1;
             numLines++;
         }
+        pos= ftello(fd1);
         percent = (float) (pos * 100) / tot;
         if (verbose) {
             printf("\t%12d\t%6.2f%%\r", countSeq, percent);
