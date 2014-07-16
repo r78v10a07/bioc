@@ -197,7 +197,7 @@ void printSegment(void * self, FILE *out, char *header, int start, int length, i
     _CHECK_SELF_P(self);
     fasta_l outf;
     int size;
-    
+
     if (start < ((fasta_l) self)->len) {
         if (start + length < ((fasta_l) self)->len) {
             size = length;
@@ -715,7 +715,7 @@ BtreeNode_t *CreateBtreeFromIndex(FILE *fi, int verbose) {
  * Create a Btree index which include the gi and the offset position
  * 
  * @param fd the input fasta file
- * @param giPattern pattern to extract the gi from the fasta header
+ * @param giPattern pattern to extract the gi from the fasta header. If null use default fasta header
  * @param verbose 1 to print info
  * @return the Btree index
  */
@@ -733,7 +733,11 @@ BtreeNode_t * CreateBtreeFromFastawithPattern(FILE *fd, char *giPattern, int ver
     }
     while ((fasta = ReadFasta(fd, 1)) != NULL) {
         value = malloc(sizeof (off_t));
-        sscanf(fasta->header,giPattern,&gi);
+        if (giPattern){
+            sscanf(fasta->header, giPattern, &gi);
+        }else{
+            fasta->getGi(fasta, &gi);
+        }
         if (verbose) {
             printf("Total: %10d \r", count);
             fflush(stdout);
