@@ -187,6 +187,16 @@ extern "C" {
     extern BtreeNode_t * CreateBtreeFromFasta(FILE *fd, int verbose);
 
     /**
+     * Create a Btree index which include the gi and the offset position
+     * 
+     * @param fd the input fasta file
+     * @param giPattern pattern to extract the gi from the fasta header
+     * @param verbose 1 to print info
+     * @return the Btree index
+     */
+    extern BtreeNode_t * CreateBtreeFromFastawithPattern(FILE *fd, char *giPattern, int verbose);
+
+    /**
      * Create a fasta binary index file which include the gi and the offset position
      * 
      * @param fd the input fasta gzip file
