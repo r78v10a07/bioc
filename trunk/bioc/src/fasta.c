@@ -711,3 +711,43 @@ BtreeNode_t *CreateBtreeFromIndex(FILE *fi, int verbose) {
     return root;
 }
 
+/**
+ * Create a Btree index which include the gi and the offset position
+ * 
+ * @param fd the input fasta file
+ * @param giPattern pattern to extract the gi from the fasta header
+ * @param verbose 1 to print info
+ * @return the Btree index
+ */
+BtreeNode_t * CreateBtreeFromFastawithPattern(FILE *fd, char *giPattern, int verbose) {
+    fasta_l fasta;
+    BtreeNode_t *root = NULL;
+    off_t *value;
+    int count, gi;
+    count = 0;
+    off_t pos = 0;
+
+    if (verbose) {
+        printf("Creating the fasta index\n");
+        fflush(stdout);
+    }
+    while ((fasta = ReadFasta(fd, 1)) != NULL) {
+        value = malloc(sizeof (off_t));
+        sscanf(fasta->header,giPattern,&gi);
+        if (verbose) {
+            printf("Total: %10d \r", count);
+            fflush(stdout);
+        }
+        *value = pos;
+        root = BtreeInsert(root, gi, value);
+        fasta->free(fasta);
+        pos = ftello(fd);
+        count++;
+    }
+    if (verbose) {
+        printf("Total: %10d \n", count);
+        fflush(stdout);
+    }
+    return root;
+}
+
