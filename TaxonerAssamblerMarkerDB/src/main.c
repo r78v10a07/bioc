@@ -39,6 +39,7 @@ void print_usage(FILE *stream, int exit_code) {
     fprintf(stream, "-l,   --readlength                  The length of the reads (default: 100)\n");
     fprintf(stream, "-z,   --readOffset                  The offset used to overlap the reads (default: 75)\n");
     fprintf(stream, "-p,   --print                       Coma separated list of taxonomy rank to print fasta (example: \"no rank,species,genus\", default not printing)\n");
+    fprintf(stream, "-a,   --pattern                     Pattern to extract the gi from the fasta header (\">%%d;\")\n");
     fprintf(stream, "********************************************************************************\n");
     fprintf(stream, "\n            Roberto Vera Alvarez (e-mail: r78v10a07@gmail.com)\n\n");
     fprintf(stream, "********************************************************************************\n");
@@ -52,8 +53,8 @@ int main(int argc, char** argv) {
 
     struct timespec start, stop;
     int next_option, verbose, gInputFlag, gFastaFlag;
-    const char* const short_options = "vhi:o:f:n:s:t:l:z:p:";
-    char *input, *output, *fasta, *index, *taxDir;
+    const char* const short_options = "vhi:o:f:n:s:t:l:z:p:a:";
+    char *input, *output, *fasta, *index, *taxDir, *giPattern;
     float score;
     FILE *fInput, *fFasta, *fIndex;
     gzFile gInput, gFasta;
@@ -78,6 +79,7 @@ int main(int argc, char** argv) {
         { "readlength", 1, NULL, 'l'},
         { "readOffset", 1, NULL, 'z'},
         { "print", 1, NULL, 'p'},
+        { "pattern", 1, NULL, 'a'},
         { NULL, 0, NULL, 0} /* Required at end of array.  */
     };
 
@@ -85,7 +87,7 @@ int main(int argc, char** argv) {
     readLength = 100;
     readOffset = 75;
     verbose = gInputFlag = gFastaFlag = 0;
-    input = output = fasta = index = taxDir = NULL;
+    input = output = fasta = index = taxDir = giPattern = NULL;
     fInput = fFasta = fIndex = NULL;
     gInput = gFasta = NULL;
     rankToPrint = NULL;
@@ -137,6 +139,10 @@ int main(int argc, char** argv) {
             case 'z':
                 readOffset = atoi(optarg);
                 break;
+
+            case 'a':
+                giPattern = strdup(optarg);
+                break;
         }
     } while (next_option != -1);
 
@@ -161,7 +167,7 @@ int main(int argc, char** argv) {
         fclose(fIndex);
     } else {
         if (!gFastaFlag) {
-            fBtree = CreateBtreeFromFasta(fFasta, verbose);
+            fBtree = CreateBtreeFromFastawithPattern(fFasta, giPattern, verbose);
         } else {
             fBtree = CreateBtreeFromFastaGzip(gFasta, verbose);
         }
@@ -187,6 +193,7 @@ int main(int argc, char** argv) {
     BTreeFree(taxDB, tax->free);
     tax->free(tax);
 
+    if (giPattern) free(giPattern);
     if (rankToPrint) free(rankToPrint);
     if (input) free(input);
     if (output) free(output);
